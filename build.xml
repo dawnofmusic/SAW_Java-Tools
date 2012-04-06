@@ -7,7 +7,7 @@
 	<property file="build.properties" />
 	<property environment="env" />
 	<property name="src.dir" value="${basedir}/src" />
-	<property name="src.resources" value="${basedir}/res" />
+	<property name="src.resources" value="${basedir}/lib" />
 	<property name="build.dir" value="${basedir}/build" />
 	<property name="build.classes.dir" value="${basedir}/build/classes" />
 	<property name="build.jar.dir" value="${basedir}/build/jar" />
