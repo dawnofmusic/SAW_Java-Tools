@@ -10,9 +10,8 @@ Programming Language: Java (JavaSE-1.6)
 
 Author
 ------
-(c) 2003 - 2012 Sebastian A. Weiﬂ - post@sebastian-weiss.de
+(c) 2003 - 2013 Sebastian A. Wei√ü
 
 Depends on the following libraries/projects
 -------------------------------------------
 * commons-logging-1.1.jar
-* jlfgr-1_0.jar

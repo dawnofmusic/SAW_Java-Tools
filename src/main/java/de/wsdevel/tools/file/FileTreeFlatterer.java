@@ -13,8 +13,8 @@ import java.util.Iterator;
  * 
  * @author <a href="mailto:sweiss@weissundschmidt.de">Sebastian A. Weiss - Weiss
  *         und Schmidt, Mediale Systeme GbR</a>
- * @version $Author: sweiss $ -- $Revision: 1.2 $ -- $Date: 2006/05/02
- *          16:06:00 $
+ * @version $Author: sweiss $ -- $Revision: 1.2 $ -- $Date: 2006/05/02 16:06:00
+ *          $
  * 
  * <br>
  *          (c) 2005, Weiss und Schmidt, Mediale Systeme GbR - All rights
@@ -50,21 +50,17 @@ public final class FileTreeFlatterer {
 	    fw.flush();
 	    fw.close();
 	} catch (FileNotFoundException e) {
-	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	} catch (IOException e) {
-	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
     }
 
 }
 /*
- * $Log: FileTreeFlatterer.java,v $
- * Revision 1.2  2009-02-09 13:15:16  sweiss
- * clean up of stuff
- * Revision 1.1 2006/05/02 16:06:00 sweissTFH
- * cleaned up tools and moved everything to appropriate new packages
+ * $Log: FileTreeFlatterer.java,v $ Revision 1.2 2009-02-09 13:15:16 sweiss
+ * clean up of stuff Revision 1.1 2006/05/02 16:06:00 sweissTFH cleaned up tools
+ * and moved everything to appropriate new packages
  * 
  * Revision 1.1 2006/04/17 15:15:55 sweissTFH added FileTreeFlatterer and
  * cleaned up
