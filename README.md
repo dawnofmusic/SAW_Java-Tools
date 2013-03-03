@@ -31,7 +31,7 @@ You can simply download or integrate this project via Maven. Just add the follow
 		<repository>
 			<id>sebastian-weiss</id>
 			<name>Sebastian's Repository</name>
-			<url>http://www.sebastian-weiss.de/mvn_repo</url>
+			<url>http://www.sebastian-weiss.de/mvn-repo</url>
 		</repository>
 		...
 	</repositories>
