@@ -20,7 +20,7 @@ You can simply download or integrate this project via Maven. Just add the follow
 		<dependency>
 			<groupId>de.wsdevel</groupId>
 			<artifactId>SAW_Java-Tools</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
+			<version>1.0.1</version>
 		</dependency>
 		...
 	</dependencies>
