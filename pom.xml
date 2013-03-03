@@ -46,11 +46,11 @@
 	<distributionManagement>
 		<repository>
 			<id>ftp-repo</id>
-			<url>ftp://sebastian-weiss.de/home/samiam/public_html/mvn-repo/releases</url>
+			<url>ftp://sebastian-weiss.de/public_html/mvn-repo/releases</url>
 		</repository>
 		<snapshotRepository>
 			<id>ftp-snapshot-repo</id>
-			<url>ftp://sebastian-weiss.de/home/samiam/public_html/mvn-repo/snapshots</url>
+			<url>ftp://sebastian-weiss.de/public_html/mvn-repo/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 

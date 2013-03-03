@@ -3,6 +3,8 @@ package de.wsdevel.tools.awt.model;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 
+import de.wsdevel.tools.awt.model.ListDataListenerSupport.ObserverType;
+
 /**
  * Created on 28.12.2003.
  * 
@@ -42,7 +44,8 @@ public class TestSortedListModel extends ListModelTest {
      */
     @Override
     public final void setUp() {
-	this.list = new ListWithListModelImpl<String>();
+	this.list = new ListWithListModelImpl<String>(
+		ObserverType.KEEP_IN_THREAD);
 	this.list.add("Gunther");
 	this.list.add("Joachim");
 	this.list.add("Michael");
@@ -64,26 +67,26 @@ public class TestSortedListModel extends ListModelTest {
 	SortedListModel<Object> sortedLM = new SortedListModel<Object>(
 		this.inner, SortedListModel.DEFAULT_OBJECT_SORTER);
 	assertEquals("incorrect size", 10, sortedLM.getSize());
-	assertEquals("incorrect element in place", "Adam", sortedLM
-		.getElementAt(0));
-	assertEquals("incorrect element in place", "Alexander", sortedLM
-		.getElementAt(1));
-	assertEquals("incorrect element in place", "Doedel", sortedLM
-		.getElementAt(2));
-	assertEquals("incorrect element in place", "Gunther", sortedLM
-		.getElementAt(3));
-	assertEquals("incorrect element in place", "Joachim", sortedLM
-		.getElementAt(4));
-	assertEquals("incorrect element in place", "Michael", sortedLM
-		.getElementAt(5));
-	assertEquals("incorrect element in place", "Petra", sortedLM
-		.getElementAt(6));
-	assertEquals("incorrect element in place", "petra", sortedLM
-		.getElementAt(7));
-	assertEquals("incorrect element in place", "Xaver", sortedLM
-		.getElementAt(8));
-	assertEquals("incorrect element in place", "Zacharias", sortedLM
-		.getElementAt(9));
+	assertEquals("incorrect element in place", "Adam",
+		sortedLM.getElementAt(0));
+	assertEquals("incorrect element in place", "Alexander",
+		sortedLM.getElementAt(1));
+	assertEquals("incorrect element in place", "Doedel",
+		sortedLM.getElementAt(2));
+	assertEquals("incorrect element in place", "Gunther",
+		sortedLM.getElementAt(3));
+	assertEquals("incorrect element in place", "Joachim",
+		sortedLM.getElementAt(4));
+	assertEquals("incorrect element in place", "Michael",
+		sortedLM.getElementAt(5));
+	assertEquals("incorrect element in place", "Petra",
+		sortedLM.getElementAt(6));
+	assertEquals("incorrect element in place", "petra",
+		sortedLM.getElementAt(7));
+	assertEquals("incorrect element in place", "Xaver",
+		sortedLM.getElementAt(8));
+	assertEquals("incorrect element in place", "Zacharias",
+		sortedLM.getElementAt(9));
     }
 
     /**
@@ -101,29 +104,29 @@ public class TestSortedListModel extends ListModelTest {
 	checkEventCalls(0, 1, 1);
 
 	assertEquals("incorrect size", 11, sortedLM.getSize());
-	assertEquals("incorrect element in place", "Adam", sortedLM
-		.getElementAt(0));
-	assertEquals("incorrect element in place", "Alexander", sortedLM
-		.getElementAt(1));
-	assertEquals("incorrect element in place", "Doedel", sortedLM
-		.getElementAt(2));
-	assertEquals("incorrect element in place", "Gunther", sortedLM
-		.getElementAt(3));
-	assertEquals("incorrect element in place", "Joachim", sortedLM
-		.getElementAt(4));
-	assertEquals("incorrect element in place", "Michael", sortedLM
-		.getElementAt(5));
-	assertEquals("incorrect element in place", "Otto", sortedLM
-		.getElementAt(6));
+	assertEquals("incorrect element in place", "Adam",
+		sortedLM.getElementAt(0));
+	assertEquals("incorrect element in place", "Alexander",
+		sortedLM.getElementAt(1));
+	assertEquals("incorrect element in place", "Doedel",
+		sortedLM.getElementAt(2));
+	assertEquals("incorrect element in place", "Gunther",
+		sortedLM.getElementAt(3));
+	assertEquals("incorrect element in place", "Joachim",
+		sortedLM.getElementAt(4));
+	assertEquals("incorrect element in place", "Michael",
+		sortedLM.getElementAt(5));
+	assertEquals("incorrect element in place", "Otto",
+		sortedLM.getElementAt(6));
 	// SEBASTIAN ???
-	assertEquals("incorrect element in place", "petra", sortedLM
-		.getElementAt(7));
-	assertEquals("incorrect element in place", "Petra", sortedLM
-		.getElementAt(8));
-	assertEquals("incorrect element in place", "Xaver", sortedLM
-		.getElementAt(9));
-	assertEquals("incorrect element in place", "Zacharias", sortedLM
-		.getElementAt(10));
+	assertEquals("incorrect element in place", "petra",
+		sortedLM.getElementAt(7));
+	assertEquals("incorrect element in place", "Petra",
+		sortedLM.getElementAt(8));
+	assertEquals("incorrect element in place", "Xaver",
+		sortedLM.getElementAt(9));
+	assertEquals("incorrect element in place", "Zacharias",
+		sortedLM.getElementAt(10));
 
 	this.list.remove("petra");
 
@@ -131,26 +134,26 @@ public class TestSortedListModel extends ListModelTest {
 	checkEventCalls(0, 2, 2);
 
 	assertEquals("incorrect size", 10, sortedLM.getSize());
-	assertEquals("incorrect element in place", "Adam", sortedLM
-		.getElementAt(0));
-	assertEquals("incorrect element in place", "Alexander", sortedLM
-		.getElementAt(1));
-	assertEquals("incorrect element in place", "Doedel", sortedLM
-		.getElementAt(2));
-	assertEquals("incorrect element in place", "Gunther", sortedLM
-		.getElementAt(3));
-	assertEquals("incorrect element in place", "Joachim", sortedLM
-		.getElementAt(4));
-	assertEquals("incorrect element in place", "Michael", sortedLM
-		.getElementAt(5));
-	assertEquals("incorrect element in place", "Otto", sortedLM
-		.getElementAt(6));
-	assertEquals("incorrect element in place", "Petra", sortedLM
-		.getElementAt(7));
-	assertEquals("incorrect element in place", "Xaver", sortedLM
-		.getElementAt(8));
-	assertEquals("incorrect element in place", "Zacharias", sortedLM
-		.getElementAt(9));
+	assertEquals("incorrect element in place", "Adam",
+		sortedLM.getElementAt(0));
+	assertEquals("incorrect element in place", "Alexander",
+		sortedLM.getElementAt(1));
+	assertEquals("incorrect element in place", "Doedel",
+		sortedLM.getElementAt(2));
+	assertEquals("incorrect element in place", "Gunther",
+		sortedLM.getElementAt(3));
+	assertEquals("incorrect element in place", "Joachim",
+		sortedLM.getElementAt(4));
+	assertEquals("incorrect element in place", "Michael",
+		sortedLM.getElementAt(5));
+	assertEquals("incorrect element in place", "Otto",
+		sortedLM.getElementAt(6));
+	assertEquals("incorrect element in place", "Petra",
+		sortedLM.getElementAt(7));
+	assertEquals("incorrect element in place", "Xaver",
+		sortedLM.getElementAt(8));
+	assertEquals("incorrect element in place", "Zacharias",
+		sortedLM.getElementAt(9));
 
 	this.list.remove("Adam");
 	this.list.remove("Alexander");

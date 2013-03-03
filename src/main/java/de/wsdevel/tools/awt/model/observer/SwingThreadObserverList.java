@@ -1,6 +1,6 @@
-package de.wsdevel.tools.awt;
+package de.wsdevel.tools.awt.model.observer;
 
-import de.wsdevel.tools.awt.model.ObserverList;
+import de.wsdevel.tools.awt.SwingThreadAdapter;
 
 /**
  * Created on 08.12.2003 from.

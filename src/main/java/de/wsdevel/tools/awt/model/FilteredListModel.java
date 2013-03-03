@@ -150,8 +150,8 @@ public class FilteredListModel<T> extends AbstractListModel implements
 					.size(); j++) {
 				    Integer val = FilteredListModel.this.indexes
 					    .remove(Integer.valueOf(j));
-				    FilteredListModel.this.indexes.put(Integer
-					    .valueOf(j - 1), val);
+				    FilteredListModel.this.indexes.put(
+					    Integer.valueOf(j - 1), val);
 				}
 				removedEntries.add(key);
 				break;
@@ -187,8 +187,8 @@ public class FilteredListModel<T> extends AbstractListModel implements
 	    Map.Entry<Integer, Integer> entry = it.next();
 	    val = entry.getValue();
 	    if (val.intValue() >= startIndex) {
-		this.indexes.put(entry.getKey(), Integer.valueOf(val.intValue()
-			+ amount));
+		this.indexes.put(entry.getKey(),
+			Integer.valueOf(val.intValue() + amount));
 	    } else {
 		this.indexes.put(entry.getKey(), entry.getValue());
 	    }
@@ -211,8 +211,8 @@ public class FilteredListModel<T> extends AbstractListModel implements
 	    Map.Entry<Integer, Integer> entry = it.next();
 	    val = entry.getValue();
 	    if (val.intValue() >= startIndex) {
-		this.indexes.put(entry.getKey(), Integer.valueOf(val.intValue()
-			- amount));
+		this.indexes.put(entry.getKey(),
+			Integer.valueOf(val.intValue() - amount));
 	    } else {
 		this.indexes.put(entry.getKey(), entry.getValue());
 	    }
@@ -296,7 +296,7 @@ public class FilteredListModel<T> extends AbstractListModel implements
 }
 //
 // $Log: FilteredListModel.java,v $
-// Revision 1.6  2009-02-10 08:58:56  sweiss
+// Revision 1.6 2009-02-10 08:58:56 sweiss
 // bug fixing
 //
 // Revision 1.5 2009-02-09 16:54:25 sweiss
@@ -304,25 +304,25 @@ public class FilteredListModel<T> extends AbstractListModel implements
 //
 // Revision 1.4 2009-02-09 13:15:13 sweiss
 // clean up of stuff
-// 
+//
 // Revision 1.3 2007-08-03 13:13:19 sweiss
 // added
 // FilteredCollection
-// 
+//
 // Revision 1.2 2007/02/27 19:50:27 mschneiderTFH
 // empty log message
-// 
+//
 // Revision 1.1 2006/05/02 16:06:00 sweissTFH
 // cleaned up tools and moved
 // everything to appropriate new packages
-// 
+//
 // Revision 1.4 2006/04/05 18:19:34 sweissTFH
 // cleaned up checkstyle errors
-// 
+//
 // Revision 1.3 2005/12/27 16:06:01 sweissTFH
 // moved to java 5 and very big clean
 // up!
-// 
+//
 // Revision 1.2 2005/10/26 16:56:23 mschneiderTFH
 // start of very big clean up and
 // commenting! (sw)

@@ -3,6 +3,7 @@ package de.wsdevel.tools.awt.model;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 
+import de.wsdevel.tools.awt.model.ListDataListenerSupport.ObserverType;
 import de.wsdevel.tools.common.interfaces.Filter;
 
 /**
@@ -58,7 +59,8 @@ public class TestFilteredListModel extends ListModelTest {
 	this.intervallAddedCalled = 0;
 	this.intervallRemovedCalled = 0;
 
-	this.inner = new ListWithListModelImpl<String>();
+	this.inner = new ListWithListModelImpl<String>(
+		ObserverType.KEEP_IN_THREAD);
 	this.inner.add("ABC");
 	this.inner.add("BCD");
 	this.inner.add("CDE");
@@ -101,63 +103,63 @@ public class TestFilteredListModel extends ListModelTest {
 
 	this.inner.add("123");
 	assertEquals("incorrect number of elements", 4, filtered.getSize());
-	assertEquals("incorrect element in model", "ABC", filtered
-		.getElementAt(0));
-	assertEquals("incorrect element in model", "BCD", filtered
-		.getElementAt(1));
-	assertEquals("incorrect element in model", "CDE", filtered
-		.getElementAt(2));
-	assertEquals("incorrect element in model", "123", filtered
-		.getElementAt(3));
+	assertEquals("incorrect element in model", "ABC",
+		filtered.getElementAt(0));
+	assertEquals("incorrect element in model", "BCD",
+		filtered.getElementAt(1));
+	assertEquals("incorrect element in model", "CDE",
+		filtered.getElementAt(2));
+	assertEquals("incorrect element in model", "123",
+		filtered.getElementAt(3));
 
 	checkEvent(filtered, 3, 3, ListDataEvent.INTERVAL_ADDED);
 
 	this.inner.remove("BCD");
 
 	assertEquals("incorrect number of elements", 3, filtered.getSize());
-	assertEquals("incorrect element in model", "ABC", filtered
-		.getElementAt(0));
-	assertEquals("incorrect element in model", "CDE", filtered
-		.getElementAt(1));
-	assertEquals("incorrect element in model", "123", filtered
-		.getElementAt(2));
+	assertEquals("incorrect element in model", "ABC",
+		filtered.getElementAt(0));
+	assertEquals("incorrect element in model", "CDE",
+		filtered.getElementAt(1));
+	assertEquals("incorrect element in model", "123",
+		filtered.getElementAt(2));
 	checkEvent(filtered, 1, 1, ListDataEvent.INTERVAL_REMOVED);
 
 	this.inner.set(10, "XYZ");
 
 	assertEquals("incorrect number of elements", 4, filtered.getSize());
-	assertEquals("incorrect element in model", "ABC", filtered
-		.getElementAt(0));
-	assertEquals("incorrect element in model", "CDE", filtered
-		.getElementAt(1));
-	assertEquals("incorrect element in model", "123", filtered
-		.getElementAt(2));
-	assertEquals("incorrect element in model", "XYZ", filtered
-		.getElementAt(3));
+	assertEquals("incorrect element in model", "ABC",
+		filtered.getElementAt(0));
+	assertEquals("incorrect element in model", "CDE",
+		filtered.getElementAt(1));
+	assertEquals("incorrect element in model", "123",
+		filtered.getElementAt(2));
+	assertEquals("incorrect element in model", "XYZ",
+		filtered.getElementAt(3));
 	checkEvent(filtered, 3, 3, ListDataEvent.INTERVAL_ADDED);
 
 	this.inner.set(10, "ZYX");
 
 	assertEquals("incorrect number of elements", 4, filtered.getSize());
-	assertEquals("incorrect element in model", "ABC", filtered
-		.getElementAt(0));
-	assertEquals("incorrect element in model", "CDE", filtered
-		.getElementAt(1));
-	assertEquals("incorrect element in model", "123", filtered
-		.getElementAt(2));
-	assertEquals("incorrect element in model", "ZYX", filtered
-		.getElementAt(3));
+	assertEquals("incorrect element in model", "ABC",
+		filtered.getElementAt(0));
+	assertEquals("incorrect element in model", "CDE",
+		filtered.getElementAt(1));
+	assertEquals("incorrect element in model", "123",
+		filtered.getElementAt(2));
+	assertEquals("incorrect element in model", "ZYX",
+		filtered.getElementAt(3));
 	checkEvent(filtered, 3, 3, ListDataEvent.CONTENTS_CHANGED);
 
 	this.inner.set(10, "1234");
 
 	assertEquals("incorrect number of elements", 3, filtered.getSize());
-	assertEquals("incorrect element in model", "ABC", filtered
-		.getElementAt(0));
-	assertEquals("incorrect element in model", "CDE", filtered
-		.getElementAt(1));
-	assertEquals("incorrect element in model", "123", filtered
-		.getElementAt(2));
+	assertEquals("incorrect element in model", "ABC",
+		filtered.getElementAt(0));
+	assertEquals("incorrect element in model", "CDE",
+		filtered.getElementAt(1));
+	assertEquals("incorrect element in model", "123",
+		filtered.getElementAt(2));
 	checkEvent(filtered, 3, 3, ListDataEvent.INTERVAL_REMOVED);
 
 	this.inner.remove("ABC");
@@ -177,21 +179,19 @@ public class TestFilteredListModel extends ListModelTest {
      */
     private void testDefaultElements(final FilteredListModel<String> filtered) {
 	assertEquals("incorrect number of elements", 3, filtered.getSize());
-	assertEquals("incorrect element in model", "ABC", filtered
-		.getElementAt(0));
-	assertEquals("incorrect element in model", "BCD", filtered
-		.getElementAt(1));
-	assertEquals("incorrect element in model", "CDE", filtered
-		.getElementAt(2));
+	assertEquals("incorrect element in model", "ABC",
+		filtered.getElementAt(0));
+	assertEquals("incorrect element in model", "BCD",
+		filtered.getElementAt(1));
+	assertEquals("incorrect element in model", "CDE",
+		filtered.getElementAt(2));
     }
 
 }
 /*
- * $Log: TestFilteredListModel.java,v $
- * Revision 1.7  2009-02-09 13:15:14  sweiss
- * clean up of stuff
- * Revision 1.6 2007-08-03 13:13:19 sweiss
- * added FilteredCollection
+ * $Log: TestFilteredListModel.java,v $ Revision 1.7 2009-02-09 13:15:14 sweiss
+ * clean up of stuff Revision 1.6 2007-08-03 13:13:19 sweiss added
+ * FilteredCollection
  * 
  * Revision 1.5 2007/03/13 18:48:30 sweissTFH new better performing
  * ListWithListModel

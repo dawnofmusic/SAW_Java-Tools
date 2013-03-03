@@ -1,4 +1,4 @@
-package de.wsdevel.tools.awt.model;
+package de.wsdevel.tools.awt.model.observer;
 
 import java.util.Iterator;
 import java.util.LinkedList;

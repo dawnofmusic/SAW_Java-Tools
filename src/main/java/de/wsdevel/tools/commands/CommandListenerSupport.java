@@ -1,7 +1,7 @@
 package de.wsdevel.tools.commands;
 
-import de.wsdevel.tools.awt.SwingThreadObserverList;
-import de.wsdevel.tools.awt.model.ObserverList;
+import de.wsdevel.tools.awt.model.observer.ObserverList;
+import de.wsdevel.tools.awt.model.observer.SwingThreadObserverList;
 
 /**
  * Created on 12.11.2006.
