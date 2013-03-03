@@ -6,8 +6,8 @@ Several tools useful for the development of Java applications.
 
 This project has been developed using the Eclipse IDE (http://www.eclipse.org).
 
-Programming Language: 	Java (JavaSE-1.6)
-Dependency management:	Maven (http://maven.apache.org)
+	Programming Language: 	Java (JavaSE-1.6)
+	Dependency management:	Maven (http://maven.apache.org)
 
 Download / Integrate
 --------------------
