@@ -14,7 +14,7 @@ import java.util.TreeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import de.wsdevel.tools.streams.StreamHelper;
+import de.wsdevel.tools.streams.Streams;
 
 /**
  * Created on 27.10.2004.
@@ -72,7 +72,7 @@ public final class Files {
 	 *             if an error occurs while reading / writing
 	 */
 	public static void copy(final File src, final File dst) throws IOException {
-		StreamHelper.readFromInWriteToOut(new FileInputStream(src), true,
+		Streams.readFromInWriteToOut(new FileInputStream(src), true,
 				new FileOutputStream(dst), true);
 	}
 
@@ -93,7 +93,7 @@ public final class Files {
 				FileOutputStream fileOutputStream = new FileOutputStream(
 						outputFileName);
 				for (int i = 0; i < files.length; i++) {
-					StreamHelper.readFromInWriteToOut(new FileInputStream(
+					Streams.readFromInWriteToOut(new FileInputStream(
 							files[i]), true, fileOutputStream, false);
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Appended [" + files[i].getName()
