@@ -21,12 +21,12 @@ import javax.swing.ListModel;
  */
 public interface ListWithListModel<V> extends List<V> {
 
-	/**
-	 * COMMENT.
-	 * 
-	 * @return {@link ListModel}
-	 */
-	ListModel<V> getListModel();
+    /**
+     * COMMENT.
+     * 
+     * @return {@link ListModel}
+     */
+    ListModel getListModel();
 }
 /*
  * $Log: ListWithListModel.java,v $ Revision 1.1 2006-05-02 16:06:00 sweissTFH
