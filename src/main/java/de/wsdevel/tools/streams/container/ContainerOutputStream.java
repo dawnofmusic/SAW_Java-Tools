@@ -21,8 +21,11 @@ import java.io.OutputStream;
 
 /**
  * ContainerOutputStream
+ * 
+ * @param <code>T</code> any type extending {@link Frame}
  */
-public abstract class ContainerOutputStream extends OutputStream {
+public abstract class ContainerOutputStream<T extends Frame> extends
+	OutputStream {
 
     /**
      * {@link OutputStream} innerOs
@@ -84,21 +87,21 @@ public abstract class ContainerOutputStream extends OutputStream {
      * writeFrame.
      * 
      * @param frame
-     *            {@link Frame}
+     *            <code>T</code>
      */
-    public abstract void writeFrame(Frame frame);
+    public abstract void writeFrame(T frame);
 
     /**
      * writeFrames.
      * 
      * @param frames
-     *            {@link Frame}[] to be written
+     *            <code>T</code> to be written
      * @param off
      *            <code>int</code> offset to take first frame from.
      * @param len
      *            <code>int</code> number of frames to write.
      */
-    public abstract void writeFrames(Frame[] frames, int off, int len);
+    public abstract void writeFrames(T[] frames, int off, int len);
 
 }
 

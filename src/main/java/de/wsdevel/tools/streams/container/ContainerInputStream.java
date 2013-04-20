@@ -21,8 +21,10 @@ import java.io.InputStream;
 
 /**
  * ContainerInputStream
+ * 
+ * @param <code>T</code> any type extending {@link Frame}
  */
-public abstract class ContainerInputStream extends InputStream {
+public abstract class ContainerInputStream<T extends Frame> extends InputStream {
 
     /**
      * {@link InputStream} innerIs
@@ -100,15 +102,15 @@ public abstract class ContainerInputStream extends InputStream {
     /**
      * readFrame.
      * 
-     * @return {@link Frame}
+     * @return <code>T</code>
      */
-    public abstract Frame readFrame();
+    public abstract T readFrame();
 
     /**
      * readFrames.
      * 
      * @param frames
-     *            {@link Frame}[] to store frames into.
+     *            <code>T[]</code> to store frames into.
      * @param off
      *            <code>int</code> offset to start writing from.
      * @param len
@@ -116,7 +118,7 @@ public abstract class ContainerInputStream extends InputStream {
      * @return <code>int</code> the number of frames read or <code>-1</code> if
      *         end of stream was reached.
      */
-    public abstract int readFrames(Frame[] frames, int off, int len);
+    public abstract int readFrames(T[] frames, int off, int len);
 
     /**
      * @throws IOException
