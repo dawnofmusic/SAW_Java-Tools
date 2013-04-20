@@ -29,7 +29,7 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
     /**
      * {@link InputStream} innerIs
      */
-    private final InputStream innerIs;
+    protected final InputStream innerIs;
 
     /**
      * ContainerInputStream constructor.
@@ -39,7 +39,7 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
     }
 
     /**
-     * @return
+     * @return <code>int</code>
      * @throws IOException
      * @see java.io.InputStream#available()
      */
@@ -58,7 +58,11 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
     }
 
     /**
+     * This method is not supported and therefore
+     * {@link UnsupportedOperationException} will be thrown at call.
+     * 
      * @param readlimit
+     *            <code>int</code>
      * @see java.io.InputStream#mark(int)
      */
     @Override
@@ -67,7 +71,8 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
     }
 
     /**
-     * @return
+     * @return <code>boolen</code> always <code>false</code> since it isn't
+     *         supported.
      * @see java.io.InputStream#markSupported()
      */
     @Override
@@ -76,7 +81,7 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
     }
 
     /**
-     * @return
+     * @return <code>int</code> the byte read.
      * @throws IOException
      * @see java.io.InputStream#read()
      */
@@ -87,9 +92,12 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
 
     /**
      * @param b
+     *            <code>byte[]</code>
      * @param off
+     *            <code>int</code>
      * @param len
-     * @return
+     *            <code>int</code>
+     * @return <code>int</code>
      * @throws IOException
      * @see java.io.InputStream#read(byte[], int, int)
      */
@@ -131,7 +139,8 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
 
     /**
      * @param n
-     * @return
+     *            <code>long</code>
+     * @return <code>long</code>
      * @throws IOException
      * @see java.io.InputStream#skip(long)
      */

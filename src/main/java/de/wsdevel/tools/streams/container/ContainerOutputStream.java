@@ -30,7 +30,7 @@ public abstract class ContainerOutputStream<T extends Frame> extends
     /**
      * {@link OutputStream} innerOs
      */
-    private final OutputStream innerOs;
+    protected final OutputStream innerOs;
 
     /**
      * ContainerOutputStream constructor.
@@ -62,8 +62,11 @@ public abstract class ContainerOutputStream<T extends Frame> extends
 
     /**
      * @param b
+     *            <code>byte[]</code>
      * @param off
+     *            <code>int</code>
      * @param len
+     *            <code>int</code>
      * @throws IOException
      * @see java.io.OutputStream#write(byte[], int, int)
      */
@@ -75,6 +78,7 @@ public abstract class ContainerOutputStream<T extends Frame> extends
 
     /**
      * @param b
+     *            <code>int</code>
      * @throws IOException
      * @see java.io.OutputStream#write(int)
      */
