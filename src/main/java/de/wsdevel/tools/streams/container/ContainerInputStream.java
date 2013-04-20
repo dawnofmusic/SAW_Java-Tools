@@ -111,8 +111,9 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
      * readFrame.
      * 
      * @return <code>T</code>
+     * @throws IOException
      */
-    public abstract T readFrame();
+    public abstract T readFrame() throws IOException;
 
     /**
      * readFrames.
@@ -125,8 +126,10 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
      *            <code>int</code> number of frames to be read.
      * @return <code>int</code> the number of frames read or <code>-1</code> if
      *         end of stream was reached.
+     * @throws IOException
      */
-    public abstract int readFrames(T[] frames, int off, int len);
+    public abstract int readFrames(T[] frames, int off, int len)
+	    throws IOException;
 
     /**
      * @throws IOException

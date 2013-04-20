@@ -92,8 +92,9 @@ public abstract class ContainerOutputStream<T extends Frame> extends
      * 
      * @param frame
      *            <code>T</code>
+     * @throws IOException
      */
-    public abstract void writeFrame(T frame);
+    public abstract void writeFrame(T frame) throws IOException;
 
     /**
      * writeFrames.
@@ -104,8 +105,10 @@ public abstract class ContainerOutputStream<T extends Frame> extends
      *            <code>int</code> offset to take first frame from.
      * @param len
      *            <code>int</code> number of frames to write.
+     * @throws IOException
      */
-    public abstract void writeFrames(T[] frames, int off, int len);
+    public abstract void writeFrames(T[] frames, int off, int len)
+	    throws IOException;
 
 }
 
