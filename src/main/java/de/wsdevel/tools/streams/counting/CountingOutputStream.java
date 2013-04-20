@@ -10,7 +10,7 @@
  * <br/>
  * &copy; Sebastian A. Weiß, 2013 - All rights reserved.
  */
-package de.wsdevel.tools.streams;
+package de.wsdevel.tools.streams.counting;
 
 import java.io.IOException;
 import java.io.OutputStream;

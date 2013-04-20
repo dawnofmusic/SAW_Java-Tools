@@ -24,210 +24,210 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class Streams {
 
-	/**
-	 * <code>int</code>.
-	 */
-	private static final int BUFFER_SIZE = 1024;
+    /**
+     * <code>int</code>.
+     */
+    private static final int BUFFER_SIZE = 1024;
 
-	/**
-	 * {@link OutputStream} COMMENT.
-	 */
-	public static final OutputStream NOWHERE_OUTPUT_STREAM = new OutputStream() {
-		@Override
-		public void write(final int b) throws IOException {
-			// do nothing (sw)
-		}
-	};
-
-	/** {@link Log} The LOG. */
-	private static final Log LOG = LogFactory.getLog(Streams.class);
-
-	/**
-	 * @param is
-	 *            {@link InputStream} to read from.
-	 * @param toBeFilled
-	 *            <code>byte[]</code> to be filled.
-	 * @throws IOException
-	 *             {@link IOException} due to errors.
-	 */
-	public static void fillByteArrayFromStream(final InputStream is,
-			final byte[] toBeFilled) throws IOException {
-		int bytesRead = 0;
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Going to read " + toBeFilled.length
-					+ " bytes from stream...");
-		}
-		while (bytesRead < toBeFilled.length) {
-			int read = is.read(toBeFilled, bytesRead, toBeFilled.length
-					- bytesRead);
-			if (read == -1) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("End of stream reached.");
-				}
-				break;
-			}
-			// if (LOG.isDebugEnabled()) {
-			// LOG.debug("Read " + read + " bytes from stream.");
-			// }
-			bytesRead += read;
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Read " + bytesRead + " bytes from stream in sum.");
-		}
+    /**
+     * {@link OutputStream} COMMENT.
+     */
+    public static final OutputStream NOWHERE_OUTPUT_STREAM = new OutputStream() {
+	@Override
+	public void write(final int b) throws IOException {
+	    // do nothing (sw)
 	}
+    };
 
-	/**
-	 * reads from in and writes to out. both streams will be closed after
-	 * processing!
-	 * 
-	 * @param in
-	 *            {@link InputStream}
-	 * @param closeIn
-	 *            <code>boolean</code>
-	 * @param out
-	 *            {@link OutputStream}
-	 * @param closeOut
-	 *            <code>boolean</code>
-	 * @throws IOException
-	 *             if an error occurs
-	 */
-	public static void readFromInWriteToOut(final InputStream in,
-			final boolean closeIn, final OutputStream out,
-			final boolean closeOut) throws IOException {
+    /** {@link Log} The LOG. */
+    private static final Log LOG = LogFactory.getLog(Streams.class);
 
-		try {
-			// Transfer bytes from in to out
-			byte[] buf = new byte[BUFFER_SIZE];
-			int len;
-			while ((len = in.read(buf)) > -1) {
-				out.write(buf, 0, len);
-			}
-		} finally {
-			if (closeIn) {
-				in.close();
-			}
-			if (closeOut) {
-				out.close();
-			}
-		}
+    /**
+     * @param is
+     *            {@link InputStream} to read from.
+     * @param toBeFilled
+     *            <code>byte[]</code> to be filled.
+     * @throws IOException
+     *             {@link IOException} due to errors.
+     */
+    public static void fillByteArrayFromStream(final InputStream is,
+	    final byte[] toBeFilled) throws IOException {
+	int bytesRead = 0;
+	if (LOG.isDebugEnabled()) {
+	    LOG.debug("Going to read " + toBeFilled.length
+		    + " bytes from stream...");
 	}
+	while (bytesRead < toBeFilled.length) {
+	    int read = is.read(toBeFilled, bytesRead, toBeFilled.length
+		    - bytesRead);
+	    if (read == -1) {
+		if (LOG.isDebugEnabled()) {
+		    LOG.debug("End of stream reached.");
+		}
+		break;
+	    }
+	    // if (LOG.isDebugEnabled()) {
+	    // LOG.debug("Read " + read + " bytes from stream.");
+	    // }
+	    bytesRead += read;
+	}
+	if (LOG.isDebugEnabled()) {
+	    LOG.debug("Read " + bytesRead + " bytes from stream in sum.");
+	}
+    }
 
-	/**
-	 * readFromInWriteToOut.
-	 * 
-	 * @param in
-	 *            {@link InputStream}
-	 * @param out
-	 *            {@link OutputStream}
-	 * @param closeOSAfterWriting
-	 *            {@code boolean}
-	 * @param bufferSize
-	 *            <code>int</code>
-	 * @return {@code long} number of bytes read
-	 */
-	public static long readFromInWriteToOut(final InputStream in,
-			final OutputStream out, final boolean closeOSAfterWriting,
-			final int bufferSize) {
-		long bytesRead = 0;
-		int read = -1;
-		final byte[] buffer = new byte[bufferSize];
+    /**
+     * reads from in and writes to out. both streams will be closed after
+     * processing!
+     * 
+     * @param in
+     *            {@link InputStream}
+     * @param closeIn
+     *            <code>boolean</code>
+     * @param out
+     *            {@link OutputStream}
+     * @param closeOut
+     *            <code>boolean</code>
+     * @throws IOException
+     *             if an error occurs
+     */
+    public static void readFromInWriteToOut(final InputStream in,
+	    final boolean closeIn, final OutputStream out,
+	    final boolean closeOut) throws IOException {
+
+	try {
+	    // Transfer bytes from in to out
+	    byte[] buf = new byte[BUFFER_SIZE];
+	    int len;
+	    while ((len = in.read(buf)) > -1) {
+		out.write(buf, 0, len);
+	    }
+	} finally {
+	    if (closeIn) {
+		in.close();
+	    }
+	    if (closeOut) {
+		out.close();
+	    }
+	}
+    }
+
+    /**
+     * readFromInWriteToOut.
+     * 
+     * @param in
+     *            {@link InputStream}
+     * @param out
+     *            {@link OutputStream}
+     * @param closeOSAfterWriting
+     *            {@code boolean}
+     * @param bufferSize
+     *            <code>int</code>
+     * @return {@code long} number of bytes read
+     */
+    public static long readFromInWriteToOut(final InputStream in,
+	    final OutputStream out, final boolean closeOSAfterWriting,
+	    final int bufferSize) {
+	long bytesRead = 0;
+	int read = -1;
+	final byte[] buffer = new byte[bufferSize];
+	try {
+	    while ((read = in.read(buffer)) > -1) {
+		bytesRead += read;
+		out.write(buffer, 0, read);
+		out.flush();
+	    }
+	} catch (final IOException e) {
+	    Streams.LOG.error(e.getLocalizedMessage(), e);
+	} finally {
+	    if (in != null) {
 		try {
-			while ((read = in.read(buffer)) > -1) {
-				bytesRead += read;
-				out.write(buffer, 0, read);
-				out.flush();
-			}
+		    in.close();
 		} catch (final IOException e) {
-			Streams.LOG.error(e.getLocalizedMessage(), e);
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (final IOException e) {
-				}
-			}
-			if ((out != null) && closeOSAfterWriting) {
-				try {
-					out.close();
-				} catch (final IOException e) {
-				}
-			}
 		}
-		return bytesRead;
-	}
-
-	/**
-	 * readFromInWriteToOut.
-	 * 
-	 * @param in
-	 *            {@link InputStream}
-	 * @param out
-	 *            {@link OutputStream}
-	 * @param bufferSize
-	 *            <code>int</code>
-	 * @return {@code long} number of bytes read
-	 */
-	public static long readFromInWriteToOut(final InputStream in,
-			final OutputStream out, final int bufferSize) {
-		return readFromInWriteToOut(in, out, true, bufferSize);
-	}
-
-	/**
-	 * @param inputStream
-	 *            {@link InputStream}
-	 * @return String
-	 */
-	public static String readStringFromStream(final InputStream inputStream) {
-		StringBuffer buffer = new StringBuffer();
+	    }
+	    if ((out != null) && closeOSAfterWriting) {
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					inputStream));
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Content: ");
-			}
-			String line = "";
-			while (true) {
-				line = reader.readLine();
-				if (line != null) {
-					if (buffer.length() > 0) {
-						buffer.append("\n");
-					}
-					buffer.append(line);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug(line);
-					}
-				} else {
-					break;
-				}
-			}
-		} catch (IOException e) {
-			LOG.error("could not extract content from URLConnection: ", e);
+		    out.close();
+		} catch (final IOException e) {
 		}
-		return buffer.toString();
+	    }
 	}
+	return bytesRead;
+    }
 
-	/**
-	 * readStringFromURL.
-	 * 
-	 * @param url
-	 *            {@link URL}
-	 * @param charsetName
-	 *            {@link String}
-	 * @return {@link String}
-	 * @throws IOException
-	 */
-	public static String readStringFromURL(final URL url,
-			final String charsetName) throws IOException {
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		Streams.readFromInWriteToOut(url.openStream(), baos, 1024);
-		return new String(baos.toByteArray(), charsetName);
-	}
+    /**
+     * readFromInWriteToOut.
+     * 
+     * @param in
+     *            {@link InputStream}
+     * @param out
+     *            {@link OutputStream}
+     * @param bufferSize
+     *            <code>int</code>
+     * @return {@code long} number of bytes read
+     */
+    public static long readFromInWriteToOut(final InputStream in,
+	    final OutputStream out, final int bufferSize) {
+	return readFromInWriteToOut(in, out, true, bufferSize);
+    }
 
-	/**
-	 * Hidden constructor.
-	 */
-	private Streams() {
+    /**
+     * @param inputStream
+     *            {@link InputStream}
+     * @return String
+     */
+    public static String readStringFromStream(final InputStream inputStream) {
+	StringBuffer buffer = new StringBuffer();
+	try {
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(
+		    inputStream));
+	    if (LOG.isDebugEnabled()) {
+		LOG.debug("Content: ");
+	    }
+	    String line = "";
+	    while (true) {
+		line = reader.readLine();
+		if (line != null) {
+		    if (buffer.length() > 0) {
+			buffer.append("\n");
+		    }
+		    buffer.append(line);
+		    if (LOG.isDebugEnabled()) {
+			LOG.debug(line);
+		    }
+		} else {
+		    break;
+		}
+	    }
+	} catch (IOException e) {
+	    LOG.error("could not extract content from URLConnection: ", e);
 	}
+	return buffer.toString();
+    }
+
+    /**
+     * readStringFromURL.
+     * 
+     * @param url
+     *            {@link URL}
+     * @param charsetName
+     *            {@link String}
+     * @return {@link String}
+     * @throws IOException
+     */
+    public static String readStringFromURL(final URL url,
+	    final String charsetName) throws IOException {
+	final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	Streams.readFromInWriteToOut(url.openStream(), baos, 1024);
+	return new String(baos.toByteArray(), charsetName);
+    }
+
+    /**
+     * Hidden constructor.
+     */
+    private Streams() {
+    }
 
 }
 //
