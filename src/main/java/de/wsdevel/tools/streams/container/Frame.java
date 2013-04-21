@@ -23,6 +23,13 @@ package de.wsdevel.tools.streams.container;
  */
 public interface Frame {
 
+    /**
+     * toBytes.
+     * 
+     * @return <code>byte[]</code>. The serialized frame.
+     */
+    byte[] toBytes();
+
 }
 
 // ==============[VERSION-CONTROL-LOG-START]==============
