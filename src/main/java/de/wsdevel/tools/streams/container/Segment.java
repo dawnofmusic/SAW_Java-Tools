@@ -56,11 +56,11 @@ public abstract class Segment<T extends Frame> implements Frame {
      * {@link byte[]} data
      */
     protected byte[] data;
+
     /**
      * <code>T[]</code> frames
      */
     protected T[] frames;
-
     /**
      * {@link Log} LOG
      */
@@ -104,6 +104,26 @@ public abstract class Segment<T extends Frame> implements Frame {
      */
     public T[] getFrames() {
 	return this.frames;
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.container.Frame#getSize()
+     * @return <code>int</code>
+     */
+    @Override
+    public int getSize() {
+	switch (this.state) {
+	case deserialized:
+	    int size = 0;
+	    for (final Frame frame : this.frames) {
+		size += frame.getSize();
+	    }
+	    return size;
+	case both:
+	case binary:
+	default:
+	    return getData().length;
+	}
     }
 
     /**

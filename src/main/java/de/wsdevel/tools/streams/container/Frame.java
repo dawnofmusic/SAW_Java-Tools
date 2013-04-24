@@ -30,6 +30,13 @@ public interface Frame {
      */
     byte[] toBytes();
 
+    /**
+     * getSize.
+     * 
+     * @return <code>int</code>
+     */
+    int getSize();
+
 }
 
 // ==============[VERSION-CONTROL-LOG-START]==============

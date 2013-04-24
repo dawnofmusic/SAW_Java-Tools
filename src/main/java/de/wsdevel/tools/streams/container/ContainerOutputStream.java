@@ -24,8 +24,7 @@ import java.io.OutputStream;
  * 
  * @param <code>T</code> any type extending {@link Frame}
  */
-public abstract class ContainerOutputStream<T extends Frame> extends
-	OutputStream {
+public class ContainerOutputStream<T extends Frame> extends OutputStream {
 
     /**
      * {@link OutputStream} innerOs
@@ -94,7 +93,9 @@ public abstract class ContainerOutputStream<T extends Frame> extends
      *            <code>T</code>
      * @throws IOException
      */
-    public abstract void writeFrame(T frame) throws IOException;
+    public void writeFrame(final T frame) throws IOException {
+	this.innerOs.write(frame.toBytes());
+    }
 
     /**
      * writeFrames.
@@ -107,16 +108,14 @@ public abstract class ContainerOutputStream<T extends Frame> extends
      *            <code>int</code> number of frames to write.
      * @throws IOException
      */
-    public abstract void writeFrames(T[] frames, int off, int len)
-	    throws IOException;
-
-    /**
-     * writeSegment.
-     * 
-     * @param segment
-     *            {@link Segment}
-     */
-    public abstract void writeSegment(Segment<T> segment) throws IOException;
+    public void writeFrames(final T[] frames, final int off, final int len)
+	    throws IOException {
+	for (int i = off; i < (off + len); i++) {
+	    if (frames[i] != null) {
+		writeFrame(frames[i]);
+	    }
+	}
+    }
 
 }
 
