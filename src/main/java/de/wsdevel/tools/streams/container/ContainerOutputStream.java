@@ -110,6 +110,14 @@ public abstract class ContainerOutputStream<T extends Frame> extends
     public abstract void writeFrames(T[] frames, int off, int len)
 	    throws IOException;
 
+    /**
+     * writeSegment.
+     * 
+     * @param segment
+     *            {@link Segment}
+     */
+    public abstract void writeSegment(Segment<T> segment) throws IOException;
+
 }
 
 // ==============[VERSION-CONTROL-LOG-START]==============

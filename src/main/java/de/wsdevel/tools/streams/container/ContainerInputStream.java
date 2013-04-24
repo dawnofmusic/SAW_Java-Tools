@@ -132,6 +132,17 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
 	    throws IOException;
 
     /**
+     * readSegment.
+     * 
+     * @param numberOfFrames
+     *            <code>int</code>
+     * @return {@link Segment}
+     * @throws IOException
+     */
+    public abstract Segment<T> readSegment(int numberOfFrames)
+	    throws IOException;
+
+    /**
      * @throws IOException
      * @see java.io.InputStream#reset()
      */
