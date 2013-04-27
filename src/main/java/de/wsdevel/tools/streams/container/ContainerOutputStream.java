@@ -29,7 +29,13 @@ public class ContainerOutputStream<T extends Frame> extends OutputStream {
     /**
      * {@link OutputStream} innerOs
      */
-    protected final OutputStream innerOs;
+    protected OutputStream innerOs;
+
+    /**
+     * ContainerOutputStream constructor.
+     */
+    public ContainerOutputStream() {
+    }
 
     /**
      * ContainerOutputStream constructor.
@@ -38,7 +44,7 @@ public class ContainerOutputStream<T extends Frame> extends OutputStream {
      *            {@link OutputStream}
      */
     public ContainerOutputStream(final OutputStream innerOsRef) {
-	this.innerOs = innerOsRef;
+	setInnerOs(innerOsRef);
     }
 
     /**
@@ -57,6 +63,25 @@ public class ContainerOutputStream<T extends Frame> extends OutputStream {
     @Override
     public void flush() throws IOException {
 	this.innerOs.flush();
+    }
+
+    /**
+     * Returns the innerOs.
+     * 
+     * @return {@link OutputStream}
+     */
+    public OutputStream getInnerOs() {
+	return this.innerOs;
+    }
+
+    /**
+     * Sets the innerOs.
+     * 
+     * @param innerOs
+     *            {@link OutputStream}
+     */
+    public void setInnerOs(final OutputStream innerOs) {
+	this.innerOs = innerOs;
     }
 
     /**
