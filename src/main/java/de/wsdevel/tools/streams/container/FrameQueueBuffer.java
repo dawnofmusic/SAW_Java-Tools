@@ -57,6 +57,14 @@ public class FrameQueueBuffer<T extends Frame> {
 	this.maxBufferSize = maxBufferSizeVal;
 	this.cos = new ContainerOutputStream<T>(null) {
 	    @Override
+	    public void close() throws IOException {
+	    }
+
+	    @Override
+	    public void flush() throws IOException {
+	    }
+
+	    @Override
 	    public void writeFrame(final T frame) throws IOException {
 		FrameQueueBuffer.this.write(frame);
 	    }
@@ -71,16 +79,21 @@ public class FrameQueueBuffer<T extends Frame> {
 	};
 	this.cis = new ContainerInputStream<T>(null) {
 	    @Override
+	    public void close() throws IOException {
+	    }
+
+	    @Override
 	    public T readFrame() throws IOException {
 		return FrameQueueBuffer.this.read();
 	    }
 
 	    @Override
-	    public int readFrames(T[] frames, int off, int len)
+	    public int readFrames(final T[] frames, final int off, final int len)
 		    throws IOException {
 		int count = 0;
-		for (int i = off; i < frames.length && i < off + len; i++) {
+		for (int i = off; (i < frames.length) && (i < (off + len)); i++) {
 		    frames[i] = readFrame();
+		    count++;
 		}
 		if (count == 0) {
 		    return -1;
@@ -89,7 +102,7 @@ public class FrameQueueBuffer<T extends Frame> {
 	    }
 
 	    @Override
-	    public Segment<T> readSegment(int numberOfFrames)
+	    public Segment<T> readSegment(final int numberOfFrames)
 		    throws IOException {
 		throw new UnsupportedOperationException();
 	    }
