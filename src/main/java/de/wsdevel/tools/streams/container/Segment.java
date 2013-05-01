@@ -24,7 +24,8 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Segment
  */
-public abstract class Segment<T extends Frame> implements Frame {
+public abstract class Segment<T extends Frame> extends AbstractFrame implements
+	Frame {
 
     /**
      * SegmentState
@@ -67,6 +68,32 @@ public abstract class Segment<T extends Frame> implements Frame {
     private static final Log LOG = LogFactory.getLog(Segment.class);
 
     /**
+     * Segment constructor.
+     */
+    public Segment() {
+    }
+
+    /**
+     * Segment constructor.
+     * 
+     * @param dataRef
+     * @param durationVal
+     */
+    public Segment(final byte[] dataRef, final long durationVal) {
+	setData(dataRef);
+	setDuration(durationVal);
+    }
+
+    /**
+     * Segment constructor.
+     * 
+     * @param framesRef
+     */
+    public Segment(final T[] framesRef) {
+	setFrames(framesRef);
+    }
+
+    /**
      * deserialize.
      * 
      * @return <code>true</code> if deserialization was successful;
@@ -97,6 +124,27 @@ public abstract class Segment<T extends Frame> implements Frame {
      */
     public byte[] getData() {
 	return this.data;
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.container.Frame#getDuration()
+     * @see de.wsdevel.tools.streams.container.AbstractFrame#getDuration()
+     * @return {@code long} duration of segment in milliseconds.
+     */
+    @Override
+    public long getDuration() {
+	switch (this.state) {
+	case deserialized:
+	    long duration = 0;
+	    for (final Frame frame : this.frames) {
+		duration += frame.getDuration();
+	    }
+	    return duration;
+	case both:
+	case binary:
+	default:
+	    return super.getDuration();
+	}
     }
 
     /**

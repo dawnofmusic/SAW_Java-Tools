@@ -24,11 +24,12 @@ package de.wsdevel.tools.streams.container;
 public interface Frame {
 
     /**
-     * toBytes.
+     * getDuration.
      * 
-     * @return <code>byte[]</code>. The serialized frame.
+     * @return {@code long} duration of frame in milliseconds or {@code -1} if
+     *         duration is not given.
      */
-    byte[] toBytes();
+    long getDuration();
 
     /**
      * getSize.
@@ -36,6 +37,13 @@ public interface Frame {
      * @return <code>int</code>
      */
     int getSize();
+
+    /**
+     * toBytes.
+     * 
+     * @return <code>byte[]</code>. The serialized frame.
+     */
+    byte[] toBytes();
 
 }
 

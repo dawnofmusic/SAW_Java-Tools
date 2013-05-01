@@ -67,6 +67,7 @@ public class FrameQueueBuffer<T extends Frame> {
 	    @Override
 	    public void writeFrame(final T frame) throws IOException {
 		FrameQueueBuffer.this.write(frame);
+		// System.out.println("wrote frame. size: " + queue.size());
 	    }
 
 	    @Override
@@ -84,6 +85,7 @@ public class FrameQueueBuffer<T extends Frame> {
 
 	    @Override
 	    public T readFrame() throws IOException {
+		// System.out.println("read frame size: " + queue.size());
 		return FrameQueueBuffer.this.read();
 	    }
 
@@ -95,9 +97,11 @@ public class FrameQueueBuffer<T extends Frame> {
 		    frames[i] = readFrame();
 		    count++;
 		}
-		if (count == 0) {
-		    return -1;
-		}
+		// never return -1! Since this buffer could get empty but filled
+		// afterwards, we would stop any communication (20130428 saw)
+		// if (count == 0) {
+		// return -1;
+		// }
 		return count;
 	    }
 
@@ -133,13 +137,13 @@ public class FrameQueueBuffer<T extends Frame> {
      * @return <code>T</code>
      */
     public T read() {
-	synchronized (this.queue) {
-	    final T poll = this.queue.poll();
-	    if (poll != null) {
-		this.bufferSize -= poll.getSize();
-		return poll;
-	    }
+	// synchronized (this.queue) {
+	final T poll = this.queue.poll();
+	if (poll != null) {
+	    this.bufferSize -= poll.getSize();
+	    return poll;
 	}
+	// }
 	return null;
     }
 
@@ -150,13 +154,16 @@ public class FrameQueueBuffer<T extends Frame> {
      *            <code>T</code>
      */
     public void write(final T frame) {
-	synchronized (this.queue) {
-	    this.queue.add(frame);
-	    this.bufferSize += frame.getSize();
-	}
+	// synchronized (this.queue) {
+	this.queue.add(frame);
+	this.bufferSize += frame.getSize();
+	System.out.println("buffer size [" + this.bufferSize / 1024
+		+ " KB]");
+	// }
 	while (this.bufferSize > this.maxBufferSize) {
 	    // read frames to dev null (20130424 saw)
 	    read();
+	    // System.out.println("discarded one frame");
 	}
     }
 
