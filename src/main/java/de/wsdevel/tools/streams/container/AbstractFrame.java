@@ -24,11 +24,11 @@ public abstract class AbstractFrame implements Frame {
     private long duration = AbstractFrame.UNDEFINED_DURATION;
 
     /**
-     * @see de.wsdevel.tools.streams.container.Frame#getDuration()
+     * @see de.wsdevel.tools.streams.container.Frame#getDurationNanos()
      * @return {@code long} the duration in milliseconds.
      */
     @Override
-    public long getDuration() {
+    public long getDurationNanos() {
 	return this.duration;
     }
 

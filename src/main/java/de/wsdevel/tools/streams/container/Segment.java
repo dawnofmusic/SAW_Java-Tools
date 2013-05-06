@@ -141,23 +141,23 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
     /**
-     * @see de.wsdevel.tools.streams.container.Frame#getDuration()
-     * @see de.wsdevel.tools.streams.container.AbstractFrame#getDuration()
+     * @see de.wsdevel.tools.streams.container.Frame#getDurationNanos()
+     * @see de.wsdevel.tools.streams.container.AbstractFrame#getDurationNanos()
      * @return {@code long} duration of segment in milliseconds.
      */
     @Override
-    public long getDuration() {
+    public long getDurationNanos() {
 	switch (this.state) {
 	case deserialized:
 	    long duration = 0;
 	    for (final Frame frame : this.frames) {
-		duration += frame.getDuration();
+		duration += frame.getDurationNanos();
 	    }
 	    return duration;
 	case both:
 	case binary:
 	default:
-	    return super.getDuration();
+	    return super.getDurationNanos();
 	}
     }
 

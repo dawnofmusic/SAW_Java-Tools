@@ -23,6 +23,7 @@ import de.wsdevel.tools.streams.container.ContainerInputStream;
 import de.wsdevel.tools.streams.container.ContainerOutputStream;
 import de.wsdevel.tools.streams.container.Frame;
 import de.wsdevel.tools.streams.container.Segment;
+import de.wsdevel.tools.streams.shaping.ShapingHelper;
 
 /**
  * FrameQueueBuffer
@@ -215,13 +216,16 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	if (poll != null) {
 	    this.bufferSize -= poll.getSize();
 	    if (getBevavior() == BufferBehavior.shaping) {
-		final long millisToSleep = this.waitUntil
-			- System.currentTimeMillis();
-		this.waitUntil = System.currentTimeMillis()
-			+ poll.getDuration();
-		if (millisToSleep > 0) {
+		final long nanosToSleep = this.waitUntil - System.nanoTime();
+		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
+		System.out.println("Nanos To Sleep " + nanosToSleep);
+		if (nanosToSleep > 0) {
 		    try {
-			Thread.sleep(millisToSleep);
+			Thread.sleep(ShapingHelper
+				.getMillisPartFromNanos(nanosToSleep),
+				ShapingHelper
+					.getNanosRestFromNanos(nanosToSleep));
+			System.out.println("slept " + nanosToSleep);
 		    } catch (final InterruptedException e) {
 		    }
 		}

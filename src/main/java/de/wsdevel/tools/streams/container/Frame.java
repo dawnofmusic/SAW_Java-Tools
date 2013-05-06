@@ -26,10 +26,10 @@ public interface Frame {
     /**
      * getDuration.
      * 
-     * @return {@code long} duration of frame in milliseconds or {@code -1} if
+     * @return {@code long} duration of frame in nanoseconds or {@code -1} if
      *         duration is not given.
      */
-    long getDuration();
+    long getDurationNanos();
 
     /**
      * getSize.
