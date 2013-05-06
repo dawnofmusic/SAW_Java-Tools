@@ -18,12 +18,6 @@ package de.wsdevel.tools.streams.buffer;
 public enum BufferBehavior {
 
     /**
-     * {@link BufferBehaviour} The blocking. Use this behavior if you want to
-     * store a specific amount of date before buffer grants read access.
-     */
-    blockingBuffer,
-
-    /**
      * {@link BufferBehaviour} The shaping. Use this behavior, if the buffer
      * shall shape the outgoing traffic according to the set target bandwidth.
      * 

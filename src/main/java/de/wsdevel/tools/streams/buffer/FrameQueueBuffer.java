@@ -205,47 +205,52 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      * @return <code>T</code>
      */
     private T read() {
-	while (this.readBlocked) {
-	    try {
-		Thread.sleep(100);
-	    } catch (final InterruptedException e) {
-	    }
-	}
-	// synchronized (this.queue) {
-	final T poll = this.queue.poll();
-	if (poll != null) {
-	    this.bufferSize -= poll.getSize();
-	    if (getBevavior() == BufferBehavior.trafficShapingBlockingBuffer) {
-		if (this.waitUntil < 0) {
-		    // first visit, initialize
-		    this.waitUntil = System.nanoTime()
-			    + poll.getDurationNanos();
-		} else {
-		    // long oldVal = this.waitUntil;
-		    final long nanosToSleep = this.waitUntil
-			    - System.nanoTime();
-		    this.waitUntil = System.nanoTime()
-			    + poll.getDurationNanos();
-		    // System.out.println("Nanos To Sleep " + nanosToSleep);
-		    if (nanosToSleep > 0) {
-			try {
-			    Thread.sleep(
-				    ShapingHelper
-					    .getMillisPartFromNanos(nanosToSleep),
-				    ShapingHelper
-					    .getNanosRestFromNanos(nanosToSleep));
-			    // System.out.println("slept " + nanosToSleep);
-			} catch (final InterruptedException e) {
-			}
-		    }
-		    // System.out.println("delta : "
-		    // + (System.nanoTime() - oldVal));
+	switch (getBevavior()) {
+	case trafficShapingBlockingBuffer:
+	    while (this.readBlocked) {
+		try {
+		    Thread.sleep(100);
+		} catch (final InterruptedException e) {
 		}
+	    }
+	    T poll = null;
+	    while ((poll = this.queue.poll()) == null) {
+		try {
+		    Thread.sleep(100);
+		} catch (final InterruptedException e) {
+		}
+	    }
+	    if (this.waitUntil < 0) {
+		// first visit, initialize
+		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
+	    } else {
+		// long oldVal = this.waitUntil;
+		final long nanosToSleep = this.waitUntil - System.nanoTime();
+		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
+		// System.out.println("Nanos To Sleep " + nanosToSleep);
+		if (nanosToSleep > 0) {
+		    try {
+			Thread.sleep(ShapingHelper
+				.getMillisPartFromNanos(nanosToSleep),
+				ShapingHelper
+					.getNanosRestFromNanos(nanosToSleep));
+			// System.out.println("slept " + nanosToSleep);
+		    } catch (final InterruptedException e) {
+		    }
+		}
+		// System.out.println("delta : "
+		// + (System.nanoTime() - oldVal));
+	    }
+	    this.bufferSize -= poll.getSize();
+	    return poll;
+	case fastAccessRingBuffer:
+	default:
+	    poll = this.queue.poll();
+	    if (poll != null) {
+		this.bufferSize -= poll.getSize();
 	    }
 	    return poll;
 	}
-	// }
-	return null;
     }
 
     /**
@@ -283,13 +288,6 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    this.queue.add(frame);
 	    this.bufferSize += frame.getSize();
 	    break;
-	case blockingBuffer:
-	    while (this.writeBlocked) {
-		try {
-		    Thread.sleep(100);
-		} catch (final InterruptedException e) {
-		}
-	    }
 	case fastAccessRingBuffer:
 	default:
 	    this.queue.add(frame);
