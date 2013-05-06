@@ -76,7 +76,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
     private final SegmentFactory<T> segmentFactory;
 
     /** {@link long} The lastTimestamp. */
-    private long waitUntil;
+    private long waitUntil = -1;
 
     /** {@link boolean} The readBlocked. */
     private boolean readBlocked = false;
@@ -216,17 +216,26 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	if (poll != null) {
 	    this.bufferSize -= poll.getSize();
 	    if (getBevavior() == BufferBehavior.shaping) {
-		final long nanosToSleep = this.waitUntil - System.nanoTime();
-		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
-		// System.out.println("Nanos To Sleep " + nanosToSleep);
-		if (nanosToSleep > 0) {
-		    try {
-			Thread.sleep(ShapingHelper
-				.getMillisPartFromNanos(nanosToSleep),
-				ShapingHelper
-					.getNanosRestFromNanos(nanosToSleep));
-			// System.out.println("slept " + nanosToSleep);
-		    } catch (final InterruptedException e) {
+		if (this.waitUntil < 0) {
+		    // first visit, initialize
+		    this.waitUntil = System.nanoTime()
+			    + poll.getDurationNanos();
+		} else {
+		    final long nanosToSleep = this.waitUntil
+			    - System.nanoTime();
+		    this.waitUntil = System.nanoTime()
+			    + poll.getDurationNanos();
+		    // System.out.println("Nanos To Sleep " + nanosToSleep);
+		    if (nanosToSleep > 0) {
+			try {
+			    Thread.sleep(
+				    ShapingHelper
+					    .getMillisPartFromNanos(nanosToSleep),
+				    ShapingHelper
+					    .getNanosRestFromNanos(nanosToSleep));
+			    // System.out.println("slept " + nanosToSleep);
+			} catch (final InterruptedException e) {
+			}
 		    }
 		}
 	    }
