@@ -195,7 +195,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      */
     @Override
     public long getCurrentBytes() {
-	return getBufferSize();
+	return this.bufferSize;
     }
 
     /**
@@ -265,7 +265,8 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	// synchronized (this.queue) {
 	this.queue.add(frame);
 	this.bufferSize += frame.getSize();
-	System.out.println("buffer size [" + (this.bufferSize / 1024) + " KB]");
+	// System.out.println("buffer size [" + (this.bufferSize / 1024) +
+	// " KB]");
 	// }
 	while (this.bufferSize > getMaximumBufferSize()) {
 	    // read frames to dev null (20130424 saw)

@@ -168,15 +168,6 @@ public abstract class Buffer {
     }
 
     /**
-     * Returns the bufferSize.
-     * 
-     * @return {@link long}
-     */
-    public long getBufferSize() {
-	return this.maximumBufferSize;
-    }
-
-    /**
      * getCurrentBytes.
      * 
      * @return {@code long} the current number of bytes used by this buffer;
