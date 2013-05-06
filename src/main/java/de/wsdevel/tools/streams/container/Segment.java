@@ -178,7 +178,9 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
 	case deserialized:
 	    int size = 0;
 	    for (final Frame frame : this.frames) {
-		size += frame.getSize();
+		if (frame != null) {
+		    size += frame.getSize();
+		}
 	    }
 	    return size;
 	case both:
