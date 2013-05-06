@@ -30,6 +30,28 @@ import de.wsdevel.tools.streams.container.Segment;
 public class FrameQueueBuffer<T extends Frame> extends Buffer {
 
     /**
+     * SegmentFactory
+     */
+    public static interface SegmentFactory<T extends Frame> {
+
+	/**
+	 * createFrameArray.
+	 * 
+	 * @param size
+	 * @return
+	 */
+	T[] createFrameArray(int size);
+
+	/**
+	 * createSegment.
+	 * 
+	 * @param frames
+	 * @return
+	 */
+	Segment<T> createSegment(T[] frames);
+    }
+
+    /**
      * {@link ConcurrentLinkedQueue}<T> queue
      */
     private final ConcurrentLinkedQueue<T> queue;
@@ -49,11 +71,25 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      */
     private ContainerInputStream<T> cis;
 
+    /** {@link SegmentFactory<T>} The segmentFactory. */
+    private final SegmentFactory<T> segmentFactory;
+
+    /** {@link long} The lastTimestamp. */
+    private long waitUntil;
+
+    /** {@link boolean} The readBlocked. */
+    private boolean readBlocked = false;
+
+    /** {@link boolean} The writeBlocked. */
+    private boolean writeBlocked = false;
+
     /**
      * SegmentQueueBuffer constructor.
      */
-    public FrameQueueBuffer(final int maxBufferSizeVal) {
+    public FrameQueueBuffer(final int maxBufferSizeVal,
+	    final SegmentFactory<T> segmentFactoryRef) {
 	super(maxBufferSizeVal);
+	this.segmentFactory = segmentFactoryRef;
 	setBevavior(BufferBehavior.fast);
 	this.queue = new ConcurrentLinkedQueue<T>();
 	this.cos = new ContainerOutputStream<T>(null) {
@@ -109,9 +145,30 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    @Override
 	    public Segment<T> readSegment(final int numberOfFrames)
 		    throws IOException {
-		throw new UnsupportedOperationException();
+		final T[] frames = FrameQueueBuffer.this.segmentFactory
+			.createFrameArray(numberOfFrames);
+		readFrames(frames, 0, numberOfFrames);
+		// SEBASTIAN potential bug. Could be frames than requested.
+		return FrameQueueBuffer.this.segmentFactory
+			.createSegment(frames);
 	    }
 	};
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#blockReadAccess()
+     */
+    @Override
+    public void blockReadAccess() {
+	this.readBlocked = true;
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#blockWriteAccess()
+     */
+    @Override
+    public void blockWriteAccess() {
+	this.writeBlocked = true;
     }
 
     /**
@@ -132,8 +189,14 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	return this.cos;
     }
 
-    /** {@link long} The lastTimestamp. */
-    private long waitUntil;
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#getCurrentBytes()
+     * @return {@code long}
+     */
+    @Override
+    public long getCurrentBytes() {
+	return getBufferSize();
+    }
 
     /**
      * read.
@@ -144,7 +207,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	while (this.readBlocked) {
 	    try {
 		Thread.sleep(100);
-	    } catch (InterruptedException e) {
+	    } catch (final InterruptedException e) {
 	    }
 	}
 	// synchronized (this.queue) {
@@ -152,12 +215,14 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	if (poll != null) {
 	    this.bufferSize -= poll.getSize();
 	    if (getBevavior() == BufferBehavior.shaping) {
-		long millisToSleep = waitUntil - System.currentTimeMillis();
-		waitUntil = System.currentTimeMillis() + poll.getDuration();
+		final long millisToSleep = this.waitUntil
+			- System.currentTimeMillis();
+		this.waitUntil = System.currentTimeMillis()
+			+ poll.getDuration();
 		if (millisToSleep > 0) {
 		    try {
 			Thread.sleep(millisToSleep);
-		    } catch (InterruptedException e) {
+		    } catch (final InterruptedException e) {
 		    }
 		}
 	    }
@@ -165,63 +230,6 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	}
 	// }
 	return null;
-    }
-
-    /**
-     * write.
-     * 
-     * @param frame
-     *            <code>T</code>
-     */
-    private void write(final T frame) {
-	while (this.writeBlocked) {
-	    try {
-		Thread.sleep(100);
-	    } catch (InterruptedException e) {
-	    }
-	}
-
-	// synchronized (this.queue) {
-	this.queue.add(frame);
-	this.bufferSize += frame.getSize();
-	System.out.println("buffer size [" + (this.bufferSize / 1024) + " KB]");
-	// }
-	while (this.bufferSize > getMaximumBufferSize()) {
-	    // read frames to dev null (20130424 saw)
-	    read();
-	    // System.out.println("discarded one frame");
-	}
-    }
-
-    /** {@link boolean} The readBlocked. */
-    private boolean readBlocked = false;
-
-    /** {@link boolean} The writeBlocked. */
-    private boolean writeBlocked = false;
-
-    /**
-     * @see de.wsdevel.tools.streams.buffer.Buffer#blockReadAccess()
-     */
-    @Override
-    public void blockReadAccess() {
-	this.readBlocked = true;
-    }
-
-    /**
-     * @see de.wsdevel.tools.streams.buffer.Buffer#blockWriteAccess()
-     */
-    @Override
-    public void blockWriteAccess() {
-	this.writeBlocked = true;
-    }
-
-    /**
-     * @see de.wsdevel.tools.streams.buffer.Buffer#getCurrentBytes()
-     * @return {@code long}
-     */
-    @Override
-    public long getCurrentBytes() {
-	return getBufferSize();
     }
 
     /**
@@ -238,6 +246,32 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
     @Override
     public void unblockWriteAccess() {
 	this.writeBlocked = false;
+    }
+
+    /**
+     * write.
+     * 
+     * @param frame
+     *            <code>T</code>
+     */
+    private void write(final T frame) {
+	while (this.writeBlocked) {
+	    try {
+		Thread.sleep(100);
+	    } catch (final InterruptedException e) {
+	    }
+	}
+
+	// synchronized (this.queue) {
+	this.queue.add(frame);
+	this.bufferSize += frame.getSize();
+	System.out.println("buffer size [" + (this.bufferSize / 1024) + " KB]");
+	// }
+	while (this.bufferSize > getMaximumBufferSize()) {
+	    // read frames to dev null (20130424 saw)
+	    read();
+	    // System.out.println("discarded one frame");
+	}
     }
 
 }
