@@ -17,6 +17,7 @@
 package de.wsdevel.tools.streams.container;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -99,9 +100,18 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
      * @return <code>true</code> if deserialization was successful;
      */
     public synchronized boolean deserialize() {
+	return deserialize(null);
+    }
+
+    /**
+     * deserialize.
+     * 
+     * @return <code>true</code> if deserialization was successful;
+     */
+    public synchronized boolean deserialize(final Map<String, Object> hints) {
 	if (getState().equals(SegmentState.binary) && (this.data != null)) {
 	    try {
-		this.frames = deserializeFrames();
+		this.frames = deserializeFrames(hints);
 		setState(SegmentState.both);
 		return true;
 	    } catch (final IOException e) {
@@ -114,10 +124,14 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     /**
      * deserializeFrames.
      * 
+     * @param hints
+     *            {@link Map}< {@link String}, {@link Object}>. May be
+     *            <code>null</code>!.
      * @return <code>T[]</code>
      * @throws IOException
      */
-    protected abstract T[] deserializeFrames() throws IOException;
+    protected abstract T[] deserializeFrames(Map<String, Object> hints)
+	    throws IOException;
 
     /**
      * @return the {@link byte[]} data

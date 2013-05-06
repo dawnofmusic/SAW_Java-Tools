@@ -123,6 +123,18 @@ public class ContainerOutputStream<T extends Frame> extends OutputStream {
     }
 
     /**
+     * writeSegment.
+     * 
+     * @param segment
+     * @throws IOException
+     */
+    public void writeSegment(final Segment<T> segment) throws IOException {
+	for (T t : segment.getFrames()) {
+	    writeFrame(t);
+	}
+    }
+
+    /**
      * writeFrames.
      * 
      * @param frames

@@ -14,25 +14,25 @@
  * (c) 2013, Sebastian A. Weiss - All rights reserved.
  */
 
-package de.wsdevel.tools.streams.container;
+package de.wsdevel.tools.streams.buffer;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import de.wsdevel.tools.streams.container.ContainerInputStream;
+import de.wsdevel.tools.streams.container.ContainerOutputStream;
+import de.wsdevel.tools.streams.container.Frame;
+import de.wsdevel.tools.streams.container.Segment;
+
 /**
  * FrameQueueBuffer
  */
-public class FrameQueueBuffer<T extends Frame> {
+public class FrameQueueBuffer<T extends Frame> extends Buffer {
 
     /**
      * {@link ConcurrentLinkedQueue}<T> queue
      */
     private final ConcurrentLinkedQueue<T> queue;
-
-    /**
-     * {@link int} maxBufferSize
-     */
-    private int maxBufferSize = -1;
 
     /**
      * {@link int} bufferSize
@@ -53,8 +53,9 @@ public class FrameQueueBuffer<T extends Frame> {
      * SegmentQueueBuffer constructor.
      */
     public FrameQueueBuffer(final int maxBufferSizeVal) {
+	super(maxBufferSizeVal);
+	setBevavior(BufferBehavior.fast);
 	this.queue = new ConcurrentLinkedQueue<T>();
-	this.maxBufferSize = maxBufferSizeVal;
 	this.cos = new ContainerOutputStream<T>(null) {
 	    @Override
 	    public void close() throws IOException {
@@ -131,16 +132,35 @@ public class FrameQueueBuffer<T extends Frame> {
 	return this.cos;
     }
 
+    /** {@link long} The lastTimestamp. */
+    private long waitUntil;
+
     /**
      * read.
      * 
      * @return <code>T</code>
      */
-    public T read() {
+    private T read() {
+	while (this.readBlocked) {
+	    try {
+		Thread.sleep(100);
+	    } catch (InterruptedException e) {
+	    }
+	}
 	// synchronized (this.queue) {
 	final T poll = this.queue.poll();
 	if (poll != null) {
 	    this.bufferSize -= poll.getSize();
+	    if (getBevavior() == BufferBehavior.shaping) {
+		long millisToSleep = waitUntil - System.currentTimeMillis();
+		waitUntil = System.currentTimeMillis() + poll.getDuration();
+		if (millisToSleep > 0) {
+		    try {
+			Thread.sleep(millisToSleep);
+		    } catch (InterruptedException e) {
+		    }
+		}
+	    }
 	    return poll;
 	}
 	// }
@@ -153,18 +173,71 @@ public class FrameQueueBuffer<T extends Frame> {
      * @param frame
      *            <code>T</code>
      */
-    public void write(final T frame) {
+    private void write(final T frame) {
+	while (this.writeBlocked) {
+	    try {
+		Thread.sleep(100);
+	    } catch (InterruptedException e) {
+	    }
+	}
+
 	// synchronized (this.queue) {
 	this.queue.add(frame);
 	this.bufferSize += frame.getSize();
-	System.out.println("buffer size [" + this.bufferSize / 1024
-		+ " KB]");
+	System.out.println("buffer size [" + (this.bufferSize / 1024) + " KB]");
 	// }
-	while (this.bufferSize > this.maxBufferSize) {
+	while (this.bufferSize > getMaximumBufferSize()) {
 	    // read frames to dev null (20130424 saw)
 	    read();
 	    // System.out.println("discarded one frame");
 	}
+    }
+
+    /** {@link boolean} The readBlocked. */
+    private boolean readBlocked = false;
+
+    /** {@link boolean} The writeBlocked. */
+    private boolean writeBlocked = false;
+
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#blockReadAccess()
+     */
+    @Override
+    public void blockReadAccess() {
+	this.readBlocked = true;
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#blockWriteAccess()
+     */
+    @Override
+    public void blockWriteAccess() {
+	this.writeBlocked = true;
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#getCurrentBytes()
+     * @return {@code long}
+     */
+    @Override
+    public long getCurrentBytes() {
+	return getBufferSize();
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#unblockReadAccess()
+     */
+    @Override
+    public void unblockReadAccess() {
+	this.readBlocked = false;
+    }
+
+    /**
+     * @see de.wsdevel.tools.streams.buffer.Buffer#unblockWriteAccess()
+     */
+    @Override
+    public void unblockWriteAccess() {
+	this.writeBlocked = false;
     }
 
 }

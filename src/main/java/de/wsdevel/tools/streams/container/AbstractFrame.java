@@ -20,12 +20,12 @@ public abstract class AbstractFrame implements Frame {
     /** {@link int} The UNDEFINED_DURATION. */
     public static final int UNDEFINED_DURATION = -1;
 
-    /** {@link long} The duration. */
+    /** {@link long} The duration in milliseconds. */
     private long duration = AbstractFrame.UNDEFINED_DURATION;
 
     /**
      * @see de.wsdevel.tools.streams.container.Frame#getDuration()
-     * @return {@code long}
+     * @return {@code long} the duration in milliseconds.
      */
     @Override
     public long getDuration() {
@@ -36,7 +36,7 @@ public abstract class AbstractFrame implements Frame {
      * Sets the duration.
      * 
      * @param duration
-     *            {@link long}
+     *            {@link long} in milliseconds.
      */
     public void setDuration(final long duration) {
 	this.duration = duration;
