@@ -134,7 +134,7 @@ public abstract class Buffer {
 		// blockWriteAccess();
 		// }
 	    } else if (getCurrentBytes() < this.readingTreshold) {
-		if (getBevavior() != BufferBehavior.fast) {
+		if (getBevavior() != BufferBehavior.fastAccessRingBuffer) {
 		    blockReadAccess();
 		}
 		setState(BufferState.filling);
@@ -241,7 +241,7 @@ public abstract class Buffer {
      *            {@link BufferBehavior}
      */
     public void setBevavior(final BufferBehavior bevaviorVal) {
-	if (bevaviorVal == BufferBehavior.fast) {
+	if (bevaviorVal == BufferBehavior.fastAccessRingBuffer) {
 	    unblockReadAccess();
 	    unblockWriteAccess();
 	}

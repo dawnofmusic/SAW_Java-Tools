@@ -21,7 +21,7 @@ public enum BufferBehavior {
      * {@link BufferBehaviour} The blocking. Use this behavior if you want to
      * store a specific amount of date before buffer grants read access.
      */
-    blocking,
+    blockingBuffer,
 
     /**
      * {@link BufferBehaviour} The shaping. Use this behavior, if the buffer
@@ -29,13 +29,13 @@ public enum BufferBehavior {
      * 
      * @see Buffer#setCurrentTargetBandwidth(long)
      */
-    shaping,
+    trafficShapingBlockingBuffer,
 
     /**
      * {@link BufferBehaviour} The fast. Use this behavior if the buffered data
      * should be accessed as fast as needed.
      */
-    fast;
+    fastAccessRingBuffer;
 
 }
 

@@ -91,7 +91,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    final SegmentFactory<T> segmentFactoryRef) {
 	super(maxBufferSizeVal);
 	this.segmentFactory = segmentFactoryRef;
-	setBevavior(BufferBehavior.fast);
+	setBevavior(BufferBehavior.fastAccessRingBuffer);
 	this.queue = new ConcurrentLinkedQueue<T>();
 	this.cos = new ContainerOutputStream<T>(null) {
 	    @Override
@@ -215,12 +215,13 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	final T poll = this.queue.poll();
 	if (poll != null) {
 	    this.bufferSize -= poll.getSize();
-	    if (getBevavior() == BufferBehavior.shaping) {
+	    if (getBevavior() == BufferBehavior.trafficShapingBlockingBuffer) {
 		if (this.waitUntil < 0) {
 		    // first visit, initialize
 		    this.waitUntil = System.nanoTime()
 			    + poll.getDurationNanos();
 		} else {
+		    // long oldVal = this.waitUntil;
 		    final long nanosToSleep = this.waitUntil
 			    - System.nanoTime();
 		    this.waitUntil = System.nanoTime()
@@ -237,6 +238,8 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 			} catch (final InterruptedException e) {
 			}
 		    }
+		    // System.out.println("delta : "
+		    // + (System.nanoTime() - oldVal));
 		}
 	    }
 	    return poll;
@@ -268,23 +271,34 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      *            <code>T</code>
      */
     private void write(final T frame) {
-	while (this.writeBlocked) {
-	    try {
-		Thread.sleep(100);
-	    } catch (final InterruptedException e) {
+	switch (getBevavior()) {
+	case trafficShapingBlockingBuffer:
+	    while (this.writeBlocked
+		    || this.bufferSize > getMaximumBufferSize()) {
+		try {
+		    Thread.sleep(100);
+		} catch (final InterruptedException e) {
+		}
 	    }
-	}
-
-	// synchronized (this.queue) {
-	this.queue.add(frame);
-	this.bufferSize += frame.getSize();
-	// System.out.println("buffer size [" + (this.bufferSize / 1024) +
-	// " KB]");
-	// }
-	while (this.bufferSize > getMaximumBufferSize()) {
-	    // read frames to dev null (20130424 saw)
-	    read();
-	    // System.out.println("discarded one frame");
+	    this.queue.add(frame);
+	    this.bufferSize += frame.getSize();
+	    break;
+	case blockingBuffer:
+	    while (this.writeBlocked) {
+		try {
+		    Thread.sleep(100);
+		} catch (final InterruptedException e) {
+		}
+	    }
+	case fastAccessRingBuffer:
+	default:
+	    this.queue.add(frame);
+	    this.bufferSize += frame.getSize();
+	    while (this.bufferSize > getMaximumBufferSize()) {
+		// read frames to dev null (20130424 saw)
+		read();
+	    }
+	    break;
 	}
     }
 
