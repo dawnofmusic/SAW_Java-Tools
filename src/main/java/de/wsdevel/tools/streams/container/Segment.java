@@ -82,7 +82,7 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
      */
     public Segment(final byte[] dataRef, final long durationVal) {
 	setData(dataRef);
-	setDuration(durationVal);
+	setDurationNanos(durationVal);
     }
 
     /**

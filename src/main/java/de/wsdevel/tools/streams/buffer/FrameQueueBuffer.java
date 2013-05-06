@@ -218,14 +218,14 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    if (getBevavior() == BufferBehavior.shaping) {
 		final long nanosToSleep = this.waitUntil - System.nanoTime();
 		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
-		System.out.println("Nanos To Sleep " + nanosToSleep);
+		// System.out.println("Nanos To Sleep " + nanosToSleep);
 		if (nanosToSleep > 0) {
 		    try {
 			Thread.sleep(ShapingHelper
 				.getMillisPartFromNanos(nanosToSleep),
 				ShapingHelper
 					.getNanosRestFromNanos(nanosToSleep));
-			System.out.println("slept " + nanosToSleep);
+			// System.out.println("slept " + nanosToSleep);
 		    } catch (final InterruptedException e) {
 		    }
 		}
