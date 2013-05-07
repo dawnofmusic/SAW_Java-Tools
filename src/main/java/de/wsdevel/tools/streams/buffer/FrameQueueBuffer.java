@@ -149,11 +149,22 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 		final T[] frames = FrameQueueBuffer.this.segmentFactory
 			.createFrameArray(numberOfFrames);
 		readFrames(frames, 0, numberOfFrames);
-		// SEBASTIAN potential bug. Could be frames than requested.
+		// SEBASTIAN potential bug. Could be less frames than requested.
 		return FrameQueueBuffer.this.segmentFactory
 			.createSegment(frames);
 	    }
 	};
+
+	// final long start = System.currentTimeMillis();
+	// new Timer().schedule(new TimerTask() {
+	// @Override
+	// public void run() {
+	// System.out.println("[seconds since start: "
+	// + (System.currentTimeMillis() - start) / 1000
+	// + ", current delta: "
+	// + currentTrafficShapingDeltaTInNanos + "]");
+	// }
+	// }, 0, 1000);
     }
 
     /**
@@ -199,6 +210,11 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	return this.bufferSize;
     }
 
+    // /**
+    // * {@link long} currentTrafficShapingDeltaTInNanos
+    // */
+    // private long currentTrafficShapingDeltaTInNanos = 0;
+
     /**
      * read.
      * 
@@ -226,7 +242,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    } else {
 		// long oldVal = this.waitUntil;
 		final long nanosToSleep = this.waitUntil - System.nanoTime();
-		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
+		this.waitUntil += poll.getDurationNanos();
 		// System.out.println("Nanos To Sleep " + nanosToSleep);
 		if (nanosToSleep > 0) {
 		    try {
@@ -234,12 +250,11 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 				.getMillisPartFromNanos(nanosToSleep),
 				ShapingHelper
 					.getNanosRestFromNanos(nanosToSleep));
-			// System.out.println("slept " + nanosToSleep);
 		    } catch (final InterruptedException e) {
 		    }
 		}
-		// System.out.println("delta : "
-		// + (System.nanoTime() - oldVal));
+		// currentTrafficShapingDeltaTInNanos = System.nanoTime() -
+		// oldVal;
 	    }
 	    this.bufferSize -= poll.getSize();
 	    return poll;
@@ -279,7 +294,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	switch (getBevavior()) {
 	case trafficShapingBlockingBuffer:
 	    while (this.writeBlocked
-		    || this.bufferSize > getMaximumBufferSize()) {
+		    || (this.bufferSize > getMaximumBufferSize())) {
 		try {
 		    Thread.sleep(100);
 		} catch (final InterruptedException e) {
