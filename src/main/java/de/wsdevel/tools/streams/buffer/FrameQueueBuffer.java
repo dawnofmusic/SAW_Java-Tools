@@ -85,6 +85,11 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
     private boolean writeBlocked = false;
 
     /**
+     * {@link boolean} closed
+     */
+    private boolean closed;
+
+    /**
      * SegmentQueueBuffer constructor.
      */
     public FrameQueueBuffer(final int maxBufferSizeVal,
@@ -96,6 +101,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	this.cos = new ContainerOutputStream<T>(null) {
 	    @Override
 	    public void close() throws IOException {
+		FrameQueueBuffer.this.closed = true;
 	    }
 
 	    @Override
@@ -104,6 +110,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 
 	    @Override
 	    public void writeFrame(final T frame) throws IOException {
+		checkClosed();
 		FrameQueueBuffer.this.write(frame);
 		// System.out.println("wrote frame. size: " + queue.size());
 	    }
@@ -111,6 +118,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    @Override
 	    public void writeFrames(final T[] frames, final int off,
 		    final int len) throws IOException {
+		checkClosed();
 		for (int i = off; (i < frames.length) && (i < (off + len)); i++) {
 		    writeFrame(frames[i]);
 		}
@@ -119,10 +127,12 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	this.cis = new ContainerInputStream<T>(null) {
 	    @Override
 	    public void close() throws IOException {
+		FrameQueueBuffer.this.close();
 	    }
 
 	    @Override
 	    public T readFrame() throws IOException {
+		checkClosed();
 		// System.out.println("read frame size: " + queue.size());
 		return FrameQueueBuffer.this.read();
 	    }
@@ -130,6 +140,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    @Override
 	    public int readFrames(final T[] frames, final int off, final int len)
 		    throws IOException {
+		checkClosed();
 		int count = 0;
 		for (int i = off; (i < frames.length) && (i < (off + len)); i++) {
 		    frames[i] = readFrame();
@@ -146,6 +157,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    @Override
 	    public Segment<T> readSegment(final int numberOfFrames)
 		    throws IOException {
+		checkClosed();
 		final T[] frames = FrameQueueBuffer.this.segmentFactory
 			.createFrameArray(numberOfFrames);
 		readFrames(frames, 0, numberOfFrames);
@@ -168,6 +180,17 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
     }
 
     /**
+     * checkClosed.
+     * 
+     * @throws IOException
+     */
+    private void checkClosed() throws IOException {
+	if (closed) {
+	    throw new IOException("FrameQueueBuffer already closed!");
+	}
+    }
+
+    /**
      * @see de.wsdevel.tools.streams.buffer.Buffer#blockReadAccess()
      */
     @Override
@@ -181,6 +204,14 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
     @Override
     public void blockWriteAccess() {
 	this.writeBlocked = true;
+    }
+
+    /**
+     * close.
+     */
+    private void close() {
+	this.closed = true;
+	this.queue.clear();
     }
 
     /**
@@ -201,6 +232,11 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	return this.cos;
     }
 
+    // /**
+    // * {@link long} currentTrafficShapingDeltaTInNanos
+    // */
+    // private long currentTrafficShapingDeltaTInNanos = 0;
+
     /**
      * @see de.wsdevel.tools.streams.buffer.Buffer#getCurrentBytes()
      * @return {@code long}
@@ -209,11 +245,6 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
     public long getCurrentBytes() {
 	return this.bufferSize;
     }
-
-    // /**
-    // * {@link long} currentTrafficShapingDeltaTInNanos
-    // */
-    // private long currentTrafficShapingDeltaTInNanos = 0;
 
     /**
      * read.
