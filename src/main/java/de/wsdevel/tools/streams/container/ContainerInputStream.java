@@ -24,7 +24,8 @@ import java.io.InputStream;
  * 
  * @param <code>T</code> any type extending {@link Frame}
  */
-public abstract class ContainerInputStream<T extends Frame> extends InputStream {
+public abstract class ContainerInputStream<F extends Frame, S extends Segment<F>>
+	extends InputStream {
 
     /**
      * {@link InputStream} innerIs
@@ -113,7 +114,7 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
      * @return <code>T</code>
      * @throws IOException
      */
-    public abstract T readFrame() throws IOException;
+    public abstract F readFrame() throws IOException;
 
     /**
      * readFrames.
@@ -128,7 +129,7 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
      *         end of stream was reached.
      * @throws IOException
      */
-    public abstract int readFrames(T[] frames, int off, int len)
+    public abstract int readFrames(F[] frames, int off, int len)
 	    throws IOException;
 
     /**
@@ -139,8 +140,7 @@ public abstract class ContainerInputStream<T extends Frame> extends InputStream 
      * @return {@link Segment}
      * @throws IOException
      */
-    public abstract Segment<T> readSegment(int numberOfFrames)
-	    throws IOException;
+    public abstract S readSegment(int numberOfFrames) throws IOException;
 
     /**
      * @throws IOException

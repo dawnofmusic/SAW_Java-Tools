@@ -17,21 +17,21 @@ import java.io.IOException;
 /**
  * ContainerTeeOutputStream
  */
-public class ContainerTeeOutputStream<T extends Frame> extends
-	ContainerOutputStream<T> {
+public class ContainerTeeOutputStream<F extends Frame, S extends Segment<F>>
+	extends ContainerOutputStream<F, S> {
 
     /** {@link ContainerOutputStream<T>} The cos1. */
-    private ContainerOutputStream<T> cos1;
+    private ContainerOutputStream<F, S> cos1;
 
     /** {@link ContainerOutputStream<T>} The cos2. */
-    private ContainerOutputStream<T> cos2;
+    private ContainerOutputStream<F, S> cos2;
 
     /**
      * ContainerTeeOutputStream constructor.
      */
     public ContainerTeeOutputStream() {
     }
-    
+
     /**
      * close
      * 
@@ -69,7 +69,7 @@ public class ContainerTeeOutputStream<T extends Frame> extends
      * 
      * @return {@link ContainerOutputStream<T>}
      */
-    public ContainerOutputStream<T> getCos1() {
+    public ContainerOutputStream<F, S> getCos1() {
 	return this.cos1;
     }
 
@@ -78,7 +78,7 @@ public class ContainerTeeOutputStream<T extends Frame> extends
      * 
      * @return {@link ContainerOutputStream<T>}
      */
-    public ContainerOutputStream<T> getCos2() {
+    public ContainerOutputStream<F, S> getCos2() {
 	return this.cos2;
     }
 
@@ -88,7 +88,7 @@ public class ContainerTeeOutputStream<T extends Frame> extends
      * @param cos1
      *            {@link ContainerOutputStream<T>}
      */
-    public void setCos1(final ContainerOutputStream<T> cos1) {
+    public void setCos1(final ContainerOutputStream<F, S> cos1) {
 	this.cos1 = cos1;
     }
 
@@ -98,7 +98,7 @@ public class ContainerTeeOutputStream<T extends Frame> extends
      * @param cos2
      *            {@link ContainerOutputStream<T>}
      */
-    public void setCos2(final ContainerOutputStream<T> cos2) {
+    public void setCos2(final ContainerOutputStream<F, S> cos2) {
 	this.cos2 = cos2;
     }
 
@@ -148,7 +148,7 @@ public class ContainerTeeOutputStream<T extends Frame> extends
      * @see de.wsdevel.tools.streams.container.ContainerOutputStream#writeFrame(de.wsdevel.tools.streams.container.Frame)
      */
     @Override
-    public void writeFrame(final T frame) throws IOException {
+    public void writeFrame(final F frame) throws IOException {
 	if (this.cos1 != null) {
 	    this.cos1.writeFrame(frame);
 	}
@@ -164,11 +164,11 @@ public class ContainerTeeOutputStream<T extends Frame> extends
      * @param off
      * @param len
      * @throws IOException
-     * @see de.wsdevel.tools.streams.container.ContainerOutputStream#writeFrames(T[],
+     * @see de.wsdevel.tools.streams.container.ContainerOutputStream#writeFrames(F[],
      *      int, int)
      */
     @Override
-    public void writeFrames(final T[] frames, final int off, final int len)
+    public void writeFrames(final F[] frames, final int off, final int len)
 	    throws IOException {
 	if (this.cos1 != null) {
 	    this.cos1.writeFrames(frames, off, len);

@@ -28,12 +28,13 @@ import de.wsdevel.tools.streams.shaping.ShapingHelper;
 /**
  * FrameQueueBuffer
  */
-public class FrameQueueBuffer<T extends Frame> extends Buffer {
+public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
+	Buffer {
 
     /**
      * SegmentFactory
      */
-    public static interface SegmentFactory<T extends Frame> {
+    public static interface SegmentFactory<F extends Frame, S extends Segment<F>> {
 
 	/**
 	 * createFrameArray.
@@ -41,7 +42,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	 * @param size
 	 * @return
 	 */
-	T[] createFrameArray(int size);
+	F[] createFrameArray(int size);
 
 	/**
 	 * createSegment.
@@ -49,13 +50,13 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	 * @param frames
 	 * @return
 	 */
-	Segment<T> createSegment(T[] frames);
+	S createSegment(F[] frames);
     }
 
     /**
      * {@link ConcurrentLinkedQueue}<T> queue
      */
-    private final ConcurrentLinkedQueue<T> queue;
+    private final ConcurrentLinkedQueue<F> queue;
 
     /**
      * {@link int} bufferSize
@@ -65,15 +66,15 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
     /**
      * {@link ContainerOutputStream<T>} cos
      */
-    private final ContainerOutputStream<T> cos;
+    private final ContainerOutputStream<F, S> cos;
 
     /**
      * {@link ContainerInputStream<T>} cis
      */
-    private ContainerInputStream<T> cis;
+    private ContainerInputStream<F, S> cis;
 
     /** {@link SegmentFactory<T>} The segmentFactory. */
-    private final SegmentFactory<T> segmentFactory;
+    private final SegmentFactory<F, S> segmentFactory;
 
     /** {@link long} The lastTimestamp. */
     private long waitUntil = -1;
@@ -93,12 +94,12 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      * SegmentQueueBuffer constructor.
      */
     public FrameQueueBuffer(final int maxBufferSizeVal,
-	    final SegmentFactory<T> segmentFactoryRef) {
+	    final SegmentFactory<F, S> segmentFactoryRef) {
 	super(maxBufferSizeVal);
 	this.segmentFactory = segmentFactoryRef;
 	setBevavior(BufferBehavior.fastAccessRingBuffer);
-	this.queue = new ConcurrentLinkedQueue<T>();
-	this.cos = new ContainerOutputStream<T>(null) {
+	this.queue = new ConcurrentLinkedQueue<F>();
+	this.cos = new ContainerOutputStream<F, S>(null) {
 	    @Override
 	    public void close() throws IOException {
 		FrameQueueBuffer.this.closed = true;
@@ -109,14 +110,14 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    }
 
 	    @Override
-	    public void writeFrame(final T frame) throws IOException {
+	    public void writeFrame(final F frame) throws IOException {
 		checkClosed();
 		FrameQueueBuffer.this.write(frame);
 		// System.out.println("wrote frame. size: " + queue.size());
 	    }
 
 	    @Override
-	    public void writeFrames(final T[] frames, final int off,
+	    public void writeFrames(final F[] frames, final int off,
 		    final int len) throws IOException {
 		checkClosed();
 		for (int i = off; (i < frames.length) && (i < (off + len)); i++) {
@@ -124,21 +125,21 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 		}
 	    }
 	};
-	this.cis = new ContainerInputStream<T>(null) {
+	this.cis = new ContainerInputStream<F, S>(null) {
 	    @Override
 	    public void close() throws IOException {
 		FrameQueueBuffer.this.close();
 	    }
 
 	    @Override
-	    public T readFrame() throws IOException {
+	    public F readFrame() throws IOException {
 		checkClosed();
 		// System.out.println("read frame size: " + queue.size());
 		return FrameQueueBuffer.this.read();
 	    }
 
 	    @Override
-	    public int readFrames(final T[] frames, final int off, final int len)
+	    public int readFrames(final F[] frames, final int off, final int len)
 		    throws IOException {
 		checkClosed();
 		int count = 0;
@@ -155,10 +156,9 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 	    }
 
 	    @Override
-	    public Segment<T> readSegment(final int numberOfFrames)
-		    throws IOException {
+	    public S readSegment(final int numberOfFrames) throws IOException {
 		checkClosed();
-		final T[] frames = FrameQueueBuffer.this.segmentFactory
+		final F[] frames = FrameQueueBuffer.this.segmentFactory
 			.createFrameArray(numberOfFrames);
 		readFrames(frames, 0, numberOfFrames);
 		// SEBASTIAN potential bug. Could be less frames than requested.
@@ -166,17 +166,6 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 			.createSegment(frames);
 	    }
 	};
-
-	// final long start = System.currentTimeMillis();
-	// new Timer().schedule(new TimerTask() {
-	// @Override
-	// public void run() {
-	// System.out.println("[seconds since start: "
-	// + (System.currentTimeMillis() - start) / 1000
-	// + ", current delta: "
-	// + currentTrafficShapingDeltaTInNanos + "]");
-	// }
-	// }, 0, 1000);
     }
 
     /**
@@ -219,7 +208,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      * 
      * @return {@link ContainerInputStream}
      */
-    public ContainerInputStream<T> getContainerInputStream() {
+    public ContainerInputStream<F, S> getContainerInputStream() {
 	return this.cis;
     }
 
@@ -228,14 +217,9 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      * 
      * @return {@link ContainerOutputStream}
      */
-    public ContainerOutputStream<T> getContainerOutputStream() {
+    public ContainerOutputStream<F, S> getContainerOutputStream() {
 	return this.cos;
     }
-
-    // /**
-    // * {@link long} currentTrafficShapingDeltaTInNanos
-    // */
-    // private long currentTrafficShapingDeltaTInNanos = 0;
 
     /**
      * @see de.wsdevel.tools.streams.buffer.Buffer#getCurrentBytes()
@@ -251,7 +235,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      * 
      * @return <code>T</code>
      */
-    private T read() {
+    private F read() {
 	switch (getBevavior()) {
 	case trafficShapingBlockingBuffer:
 	    while (this.readBlocked) {
@@ -260,7 +244,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 		} catch (final InterruptedException e) {
 		}
 	    }
-	    T poll = null;
+	    F poll = null;
 	    while ((poll = this.queue.poll()) == null) {
 		try {
 		    Thread.sleep(100);
@@ -271,10 +255,8 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 		// first visit, initialize
 		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
 	    } else {
-		// long oldVal = this.waitUntil;
 		final long nanosToSleep = this.waitUntil - System.nanoTime();
 		this.waitUntil += poll.getDurationNanos();
-		// System.out.println("Nanos To Sleep " + nanosToSleep);
 		if (nanosToSleep > 0) {
 		    try {
 			Thread.sleep(ShapingHelper
@@ -284,8 +266,6 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
 		    } catch (final InterruptedException e) {
 		    }
 		}
-		// currentTrafficShapingDeltaTInNanos = System.nanoTime() -
-		// oldVal;
 	    }
 	    this.bufferSize -= poll.getSize();
 	    return poll;
@@ -321,7 +301,7 @@ public class FrameQueueBuffer<T extends Frame> extends Buffer {
      * @param frame
      *            <code>T</code>
      */
-    private void write(final T frame) {
+    private void write(final F frame) {
 	switch (getBevavior()) {
 	case trafficShapingBlockingBuffer:
 	    while (this.writeBlocked
