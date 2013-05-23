@@ -60,22 +60,38 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      * 
      * @return
      */
-    public Long getNextTS() {
+    private Long getNextTS() {
 	if (this.knownTS == null) {
 	    final long now = System.currentTimeMillis();
-	    final long startTS = now - (this.offset * 1000);
+	    final long startTS = now + (this.offset * 1000);
 	    this.knownTS = new LinkedList<Long>(this.queue.timestamps);
 	    this.lastTS = 0l;
-	    while ((this.lastTS = this.knownTS.pollFirst()) < startTS) {
+	    while (this.lastTS < startTS) {
+		this.lastTS = this.knownTS.pollFirst();
+		if (this.lastTS == null) {
+		    return null;
+		}
 	    }
 	    return this.lastTS;
 	}
-	this.lastTS = this.knownTS.poll();
-	if (this.lastTS == null) {
-	    this.knownTS = new LinkedList<Long>(this.queue.timestamps);
-	    Long newVal = 0l;
-	    while ((newVal = this.knownTS.pollFirst()) <= this.lastTS) {
-	    }
+	Long newVal = this.knownTS.poll();
+	// SEBASTIAN maybe we should refresh the knownTS List earlier!
+	if (newVal == null) {
+	    do {
+		this.knownTS = new LinkedList<Long>(this.queue.timestamps);
+		newVal = 0l;
+		inner: while (newVal <= this.lastTS) {
+		    newVal = this.knownTS.pollFirst();
+		    if (newVal == null) {
+			// no new timestamps yet, try it again
+			try {
+			    Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			}
+			break inner;
+		    }
+		}
+	    } while (newVal == null);
 	    this.lastTS = newVal;
 	}
 	return this.lastTS;

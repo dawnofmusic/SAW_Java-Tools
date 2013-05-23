@@ -94,7 +94,8 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * SegmentQueueBuffer constructor.
      */
     public FrameQueueBuffer(final int maxBufferSizeVal,
-	    final SegmentFactory<F, S> segmentFactoryRef) {
+	    final SegmentFactory<F, S> segmentFactoryRef,
+	    final boolean closeableCIS) {
 	super(maxBufferSizeVal);
 	this.segmentFactory = segmentFactoryRef;
 	setBevavior(BufferBehavior.fastAccessRingBuffer);
@@ -102,7 +103,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	this.cos = new ContainerOutputStream<F, S>(null) {
 	    @Override
 	    public void close() throws IOException {
-		FrameQueueBuffer.this.closed = true;
+		FrameQueueBuffer.this.close();
 	    }
 
 	    @Override
@@ -128,7 +129,9 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	this.cis = new ContainerInputStream<F, S>(null) {
 	    @Override
 	    public void close() throws IOException {
-		FrameQueueBuffer.this.close();
+		if (closeableCIS) {
+		    FrameQueueBuffer.this.close();
+		}
 	    }
 
 	    @Override
