@@ -16,6 +16,7 @@
 
 package de.wsdevel.tools.streams.buffer;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import de.wsdevel.tools.streams.container.Frame;
@@ -25,6 +26,11 @@ import de.wsdevel.tools.streams.container.Segment;
  * TimeshiftBuffer
  */
 public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
+
+    /**
+     * {@link FrameQueueBuffer.SegmentFactory<F,S>} factory
+     */
+    private final FrameQueueBuffer.SegmentFactory<F, S> factory;
 
     /**
      * {@link LinkedList<Long>} knownTS
@@ -47,12 +53,19 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     private final FileSystemFrameQueue<F, S> queue;
 
     /**
+     * {@link S} currentSegment
+     */
+    private S currentSegment;
+
+    /**
      * Timeshift constructor.
      * 
      * @param queueRef
      */
-    public TimeshiftBuffer(final FileSystemFrameQueue<F, S> queueRef) {
+    public TimeshiftBuffer(final FileSystemFrameQueue<F, S> queueRef,
+	    final FrameQueueBuffer.SegmentFactory<F, S> factoryRef) {
 	this.queue = queueRef;
+	this.factory = factoryRef;
     }
 
     /**
@@ -86,7 +99,7 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 			// no new timestamps yet, try it again
 			try {
 			    Thread.sleep(1000);
-			} catch (InterruptedException e) {
+			} catch (final InterruptedException e) {
 			}
 			break inner;
 		    }
@@ -111,12 +124,26 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      *            <code>int</code>
      * @return <code>S</code>
      */
-    public S readSegment() {
-	final Long ts = getNextTS();
-	if (ts == null) {
-	    return null;
+    public S readSegment(final int framesToRead) {
+	if (this.currentSegment == null) {
+	    final Long ts = getNextTS();
+	    if (ts == null) {
+		return null;
+	    }
+	    this.currentSegment = this.queue
+		    .getTFromFile(this.queue.chunkBuffer.get(ts));
 	}
-	return this.queue.getTFromFile(this.queue.chunkBuffer.get(ts));
+	S returnVal = null;
+	final F[] frames = this.currentSegment.getFrames();
+	if (frames.length <= framesToRead) {
+	    returnVal = this.currentSegment;
+	    this.currentSegment = null;
+	}
+	returnVal = this.factory.createSegment(Arrays.copyOfRange(frames, 0,
+		framesToRead));
+	this.currentSegment = this.factory.createSegment(Arrays.copyOfRange(
+		frames, framesToRead, frames.length));
+	return returnVal;
     }
 
     /**
