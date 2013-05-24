@@ -19,6 +19,9 @@ package de.wsdevel.tools.streams.buffer;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.wsdevel.tools.streams.container.Frame;
 import de.wsdevel.tools.streams.container.Segment;
 
@@ -35,12 +38,12 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     /**
      * {@link LinkedList<Long>} knownTS
      */
-    private LinkedList<Long> knownTS;
+    private LinkedList<Long> knownTS = null;
 
     /**
      * {@link Long} lastTS
      */
-    private Long lastTS = null;
+    private Long lastTS = 0l;
 
     /**
      * {@link int} offset
@@ -69,6 +72,12 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     }
 
     /**
+     * {@link Log} LOG
+     */
+    @SuppressWarnings("unused")
+    private static final Log LOG = LogFactory.getLog(TimeshiftBuffer.class);
+
+    /**
      * getOrCreateNewKnownTS.
      * 
      * @return
@@ -82,6 +91,7 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	    while (this.lastTS < startTS) {
 		this.lastTS = this.knownTS.pollFirst();
 		if (this.lastTS == null) {
+		    this.lastTS = 0l;
 		    return null;
 		}
 	    }
@@ -105,8 +115,10 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 		    }
 		}
 	    } while (newVal == null);
-	    this.lastTS = newVal;
 	}
+	this.lastTS = newVal;
+	// System.out.println(DateFormat.getTimeInstance()
+	// .format(new Date(lastTS)));
 	return this.lastTS;
     }
 
@@ -138,6 +150,7 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	if (frames.length <= framesToRead) {
 	    returnVal = this.currentSegment;
 	    this.currentSegment = null;
+	    return returnVal;
 	}
 	returnVal = this.factory.createSegment(Arrays.copyOfRange(frames, 0,
 		framesToRead));
@@ -153,7 +166,7 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     public void setOffset(final int offset) {
 	if (offset > 0) {
 	    throw new IllegalArgumentException(
-		    "offset MUST be less than pr equal to 0!");
+		    "offset MUST be less than or equal to 0!");
 	}
 	this.offset = offset;
 	if (this.knownTS != null) {

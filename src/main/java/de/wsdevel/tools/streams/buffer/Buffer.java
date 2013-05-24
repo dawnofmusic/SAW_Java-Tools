@@ -257,8 +257,8 @@ public abstract class Buffer {
     public void setMaximumBufferSize(final long maximumBufferSize) {
 	final long oldValue = this.maximumBufferSize;
 	this.maximumBufferSize = maximumBufferSize;
-	this.preFillTreshold = Math.round(this.maximumBufferSize * 0.8f);
-	this.readingTreshold = Math.round(this.maximumBufferSize * 0.3f);
+	this.preFillTreshold = Math.round(this.maximumBufferSize * 0.7f);
+	this.readingTreshold = Math.round(this.maximumBufferSize * 0.2f);
 	this._50PercentTreshold = Math.round(this.maximumBufferSize * 0.5f);
 	this.pcs.firePropertyChange(Buffer.PROPERTY_NAME_MAXIMUM_BUFFER_SIZE,
 		oldValue, this.maximumBufferSize);
