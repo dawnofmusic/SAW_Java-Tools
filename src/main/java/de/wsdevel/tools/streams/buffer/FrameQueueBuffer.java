@@ -172,17 +172,6 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     }
 
     /**
-     * checkClosed.
-     * 
-     * @throws IOException
-     */
-    private void checkClosed() throws IOException {
-	if (closed) {
-	    throw new IOException("FrameQueueBuffer already closed!");
-	}
-    }
-
-    /**
      * @see de.wsdevel.tools.streams.buffer.Buffer#blockReadAccess()
      */
     @Override
@@ -196,6 +185,26 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     @Override
     public void blockWriteAccess() {
 	this.writeBlocked = true;
+    }
+
+    /**
+     * checkClosed.
+     * 
+     * @throws IOException
+     */
+    private void checkClosed() throws IOException {
+	if (this.closed) {
+	    throw new IOException("FrameQueueBuffer already closed!");
+	}
+    }
+
+    /**
+     * clear.
+     */
+    public void clear() {
+	this.queue.clear();
+	this.bufferSize = 0;
+	this.waitUntil = -1;
     }
 
     /**

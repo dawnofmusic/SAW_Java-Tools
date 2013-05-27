@@ -220,6 +220,35 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
     /**
+     * setDurationNanos.
+     * 
+     * @see de.wsdevel.tools.streams.container.AbstractFrame#setDurationNanos(long)
+     * @param durationNanosVal
+     *            {@code long}
+     */
+    @Override
+    public void setDurationNanos(final long durationNanosVal) {
+	super.setDurationNanos(durationNanosVal);
+	switch (this.state) {
+	case deserialized:
+	case both:
+	    if ((getFrames().length > 0) && (durationNanosVal > 0)) {
+		final long nanosPerFrame = durationNanosVal
+			/ getFrames().length;
+		for (final Frame frame : this.frames) {
+		    if (frame != null) {
+			frame.setDurationNanos(nanosPerFrame);
+		    }
+		}
+	    }
+	    break;
+	case binary:
+	default:
+	    break;
+	}
+    }
+
+    /**
      * @param framesRef
      *            {@link T[]} the frames to set
      */

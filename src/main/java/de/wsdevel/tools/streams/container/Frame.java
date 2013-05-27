@@ -19,9 +19,18 @@ package de.wsdevel.tools.streams.container;
 /**
  * Frame.
  * 
- * Marker Interface for frames contained in a Container<I/O>Stream
+ * Interface for frames contained in a Container<I/O>Stream
  */
 public interface Frame {
+
+    /**
+     * setDurationNanos.
+     * 
+     * @param nanos
+     *            {@code long} duration of frame in nanoseconds or {@code -1} if
+     *            duration is not given.
+     */
+    void setDurationNanos(long nanos);
 
     /**
      * getDuration.
