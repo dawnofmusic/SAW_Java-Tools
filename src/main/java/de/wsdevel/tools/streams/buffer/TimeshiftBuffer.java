@@ -149,8 +149,12 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 		.get(ts));
 	// System.out.println("duration nanos: " + (NANOS_IN_MILLIS * (ts -
 	// last)));
-	sFromFile.setDurationNanos(TimeshiftBuffer.NANOS_IN_MILLIS
-		* (ts - last));
+	if (last > 0) {
+	    sFromFile.setDurationNanos(TimeshiftBuffer.NANOS_IN_MILLIS
+		    * (ts - last));
+	} else {
+	    sFromFile.setDurationNanos(-1);
+	}
 	return sFromFile;
     }
 

@@ -266,7 +266,11 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
 	if (lastOfferedTimestamp > -1) {
 	    long deltat = timestamp - lastOfferedTimestamp;
 	    if (deltat > 0) {
-		this.lastChunksBWInBPS = 1000 * e.getSize() * 8 / deltat;
+		this.lastChunksBWInBPS = Math.round((1000l * e.getSize() * 8l)
+			/ (double) deltat);
+		// System.out.println("size: " + e.getSize() + ", bytes.size: "
+		// + e.getData().length + ", deltat: " + deltat
+		// + ", lastChunkBW: " + this.lastChunksBWInBPS);
 	    }
 	}
 	if (writeSegmentToFS(e, file)) {
