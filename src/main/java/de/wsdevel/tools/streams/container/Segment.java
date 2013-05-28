@@ -50,6 +50,11 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
     /**
+     * {@link String} id
+     */
+    private String id;
+
+    /**
      * {@link SegmentState} state
      */
     protected SegmentState state = SegmentState.binary;
@@ -63,6 +68,7 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
      * <code>T[]</code> frames
      */
     protected T[] frames;
+
     /**
      * {@link Log} LOG
      */
@@ -169,6 +175,13 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
     /**
+     * @return the {@link String} id
+     */
+    public String getId() {
+	return this.id;
+    }
+
+    /**
      * @see de.wsdevel.tools.streams.container.Frame#getSize()
      * @return <code>int</code>
      */
@@ -258,6 +271,14 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
 	}
 	this.frames = framesRef;
 	setState(SegmentState.deserialized);
+    }
+
+    /**
+     * @param id
+     *            {@link String} the id to set
+     */
+    public void setId(final String id) {
+	this.id = id;
     }
 
     /**

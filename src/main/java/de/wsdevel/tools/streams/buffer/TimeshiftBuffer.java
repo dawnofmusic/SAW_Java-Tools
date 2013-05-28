@@ -61,6 +61,17 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     private S currentSegment;
 
     /**
+     * {@link Log} LOG
+     */
+    @SuppressWarnings("unused")
+    private static final Log LOG = LogFactory.getLog(TimeshiftBuffer.class);
+
+    /**
+     * {@link int} NANOS_IN_MILLIS
+     */
+    public static final int NANOS_IN_MILLIS = 1000 * 1000;
+
+    /**
      * Timeshift constructor.
      * 
      * @param queueRef
@@ -70,12 +81,6 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	this.queue = queueRef;
 	this.factory = factoryRef;
     }
-
-    /**
-     * {@link Log} LOG
-     */
-    @SuppressWarnings("unused")
-    private static final Log LOG = LogFactory.getLog(TimeshiftBuffer.class);
 
     /**
      * getOrCreateNewKnownTS.
@@ -132,18 +137,37 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     /**
      * readSegment.
      * 
+     * @return <code>S</code>
+     */
+    public S readSegment() {
+	final Long last = this.lastTS;
+	final Long ts = getNextTS();
+	if (ts == null) {
+	    return null;
+	}
+	final S sFromFile = this.queue.getSFromFile(this.queue.chunkBuffer
+		.get(ts));
+	// System.out.println("duration nanos: " + (NANOS_IN_MILLIS * (ts -
+	// last)));
+	sFromFile.setDurationNanos(TimeshiftBuffer.NANOS_IN_MILLIS
+		* (ts - last));
+	return sFromFile;
+    }
+
+    /**
+     * readSegment.
+     * 
      * @param numberOfFrames
      *            <code>int</code>
      * @return <code>S</code>
      */
     public S readSegment(final int framesToRead) {
 	if (this.currentSegment == null) {
-	    final Long ts = getNextTS();
-	    if (ts == null) {
+	    final S readSegment = readSegment();
+	    if (readSegment == null) {
 		return null;
 	    }
-	    this.currentSegment = this.queue
-		    .getTFromFile(this.queue.chunkBuffer.get(ts));
+	    this.currentSegment = readSegment;
 	}
 	S returnVal = null;
 	final F[] frames = this.currentSegment.getFrames();
