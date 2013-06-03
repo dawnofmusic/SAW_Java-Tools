@@ -50,6 +50,11 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
     /**
+     * {@link int} sequenceNumber
+     */
+    private int sequenceNumber = 0;
+
+    /**
      * {@link String} id
      */
     private String id;
@@ -182,6 +187,15 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
     /**
+     * getSequenceNumber.
+     * 
+     * @return
+     */
+    public int getSequenceNumber() {
+	return this.sequenceNumber;
+    }
+
+    /**
      * @see de.wsdevel.tools.streams.container.Frame#getSize()
      * @return <code>int</code>
      */
@@ -279,6 +293,15 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
      */
     public void setId(final String id) {
 	this.id = id;
+    }
+
+    /**
+     * setSequenceNumber.
+     * 
+     * @param sequenceNumber
+     */
+    public void setSequenceNumber(final int sequenceNumber) {
+	this.sequenceNumber = sequenceNumber;
     }
 
     /**

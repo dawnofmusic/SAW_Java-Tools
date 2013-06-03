@@ -59,6 +59,11 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
     }
 
     /**
+     * {@link String} MINUS
+     */
+    private static final String MINUS = "-";
+
+    /**
      * {@link int} DEFAULT_COPY_BUFFER_SIZE
      */
     private static final int DEFAULT_COPY_BUFFER_SIZE = 256 * 1024;
@@ -140,6 +145,16 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
     final Queue<Long> timestamps = new ConcurrentLinkedQueue<Long>();
 
     /**
+     * {@link long} lastOfferedTimestamp
+     */
+    private long lastOfferedTimestamp = -1;
+
+    /**
+     * {@link long} lastChunksBW
+     */
+    private long lastChunksBWInBPS = -1;
+
+    /**
      * FileSystemFrameQueue constructor.
      * 
      * @param deserializerRef
@@ -182,10 +197,30 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
     }
 
     /**
+     * createFilenameForChunk.
+     * 
+     * @param e
+     * @param timestamp
+     * @return
+     */
+    private String createFilenameForChunk(final S e, final long timestamp) {
+	return Long.toString(timestamp) + FileSystemFrameQueue.MINUS
+		+ Integer.toString(e.getSequenceNumber())
+		+ FileSystemFrameQueue.MINUS + this.name;
+    }
+
+    /**
      * @return the {@link QueueBehaviour} behaviour
      */
     public QueueBehaviour getBehaviour() {
 	return this.behaviour;
+    }
+
+    /**
+     * @return the {@link long} lastChunksBWInBPS
+     */
+    public long getLastChunksBWInBPS() {
+	return this.lastChunksBWInBPS;
     }
 
     /**
@@ -203,6 +238,20 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
     }
 
     /**
+     * getSequenceNumberFromFilename.
+     * 
+     * @param name2
+     * @return
+     */
+    private int getSequenceNumberFromFilename(final String name2) {
+	final String[] split = name2.split(FileSystemFrameQueue.MINUS);
+	if (split.length >= 3) {
+	    return Integer.parseInt(split[1]);
+	}
+	return 0;
+    }
+
+    /**
      * getTFromFile.
      * 
      * @param file
@@ -217,6 +266,9 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
 		final S deserialize = this.deserializer.deserialize(baos
 			.toByteArray());
 		deserialize.setId(file.getName());
+		deserialize
+			.setSequenceNumber(getSequenceNumberFromFilename(file
+				.getName()));
 		return deserialize;
 	    } catch (final FileNotFoundException e) {
 		FileSystemFrameQueue.LOG.error(e.getLocalizedMessage(), e);
@@ -237,20 +289,15 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
     }
 
     /**
-     * {@link long} lastOfferedTimestamp
+     * offer.
+     * 
+     * @see java.util.Queue#offer(java.lang.Object)
+     * @param e
+     * @return
      */
-    private long lastOfferedTimestamp = -1;
-
-    /**
-     * {@link long} lastChunksBW
-     */
-    private long lastChunksBWInBPS = -1;
-
-    /**
-     * @return the {@link long} lastChunksBWInBPS
-     */
-    public long getLastChunksBWInBPS() {
-	return lastChunksBWInBPS;
+    @Override
+    public boolean offer(final S e) {
+	return offer(e, System.currentTimeMillis());
     }
 
     /**
@@ -261,10 +308,10 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
      * @return
      */
     public boolean offer(final S e, final long timestamp) {
-	final File file = createChunkFileForChunkURI(Long.toString(timestamp)
-		+ "-" + this.name, this.cacheDir); //$NON-NLS-1$
-	if (lastOfferedTimestamp > -1) {
-	    long deltat = timestamp - lastOfferedTimestamp;
+	final File file = createChunkFileForChunkURI(
+		createFilenameForChunk(e, timestamp), this.cacheDir);
+	if (this.lastOfferedTimestamp > -1) {
+	    final long deltat = timestamp - this.lastOfferedTimestamp;
 	    if (deltat > 0) {
 		this.lastChunksBWInBPS = Math.round((1000l * e.getSize() * 8l)
 			/ (double) deltat);
@@ -295,18 +342,6 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
 	    }
 	}
 	return false;
-    }
-
-    /**
-     * offer.
-     * 
-     * @see java.util.Queue#offer(java.lang.Object)
-     * @param e
-     * @return
-     */
-    @Override
-    public boolean offer(final S e) {
-	return offer(e, System.currentTimeMillis());
     }
 
     /**

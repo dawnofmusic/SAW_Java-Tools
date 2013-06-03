@@ -180,6 +180,8 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	    this.currentSegment = null;
 	    return returnVal;
 	}
+	// SEBASTIAN sequence number of segments gets broken! needs to be
+	// checked
 	returnVal = this.factory.createSegment(Arrays.copyOfRange(frames, 0,
 		framesToRead));
 	this.currentSegment = this.factory.createSegment(Arrays.copyOfRange(
