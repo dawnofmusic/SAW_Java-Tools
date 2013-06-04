@@ -72,6 +72,21 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     public static final int NANOS_IN_MILLIS = 1000 * 1000;
 
     /**
+     * {@link int} lastSequenceNumber
+     */
+    private int lastSequenceNumber = -1;
+
+    /**
+     * {@link int} sequenceNumberOffset
+     */
+    private int sequenceNumberOffset = 0;
+
+    /**
+     * {@link boolean} offsetChanged
+     */
+    private boolean offsetChanged = false;
+
+    /**
      * Timeshift constructor.
      * 
      * @param queueRef
@@ -144,7 +159,17 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	if (ts == null) {
 	    return null;
 	}
-	return this.queue.getSFromFile(this.queue.chunkBuffer.get(ts));
+	final S sFromFile = this.queue.getSFromFile(this.queue.chunkBuffer
+		.get(ts));
+	if (this.offsetChanged && (this.lastSequenceNumber > -1)) {
+	    this.sequenceNumberOffset = sFromFile.getSequenceNumber()
+		    - this.lastSequenceNumber - 1;
+	    this.offsetChanged = false;
+	}
+	sFromFile.setSequenceNumber(sFromFile.getSequenceNumber()
+		- this.sequenceNumberOffset);
+	this.lastSequenceNumber = sFromFile.getSequenceNumber();
+	return sFromFile;
     }
 
     /**
@@ -187,12 +212,17 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	    throw new IllegalArgumentException(
 		    "offset MUST be less than or equal to 0!");
 	}
-	this.offset = offset;
-	if (this.knownTS != null) {
-	    this.knownTS.clear();
-	    this.knownTS = null;
+	if (this.offset != offset) {
+	    this.offset = offset;
+	    if (this.knownTS != null) {
+		this.knownTS.clear();
+		this.knownTS = null;
+	    }
+	    this.offsetChanged = true;
+	    this.lastTS = 0l;
 	}
-	this.lastTS = 0l;
+	// SEBASTIAN what about sequence numbers of segments after changing the
+	// offset? we should keep the last one and offset accordingly!
     }
 }
 
