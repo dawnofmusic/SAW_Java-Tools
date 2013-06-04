@@ -140,22 +140,11 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      * @return <code>S</code>
      */
     public S readSegment() {
-	final Long last = this.lastTS;
 	final Long ts = getNextTS();
 	if (ts == null) {
 	    return null;
 	}
-	final S sFromFile = this.queue.getSFromFile(this.queue.chunkBuffer
-		.get(ts));
-	// System.out.println("duration nanos: " + (NANOS_IN_MILLIS * (ts -
-	// last)));
-	if (last > 0) {
-	    sFromFile.setDurationNanos(TimeshiftBuffer.NANOS_IN_MILLIS
-		    * (ts - last));
-	} else {
-	    sFromFile.setDurationNanos(-1);
-	}
-	return sFromFile;
+	return this.queue.getSFromFile(this.queue.chunkBuffer.get(ts));
     }
 
     /**

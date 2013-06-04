@@ -206,6 +206,8 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
     private String createFilenameForChunk(final S e, final long timestamp) {
 	return Long.toString(timestamp) + FileSystemFrameQueue.MINUS
 		+ Integer.toString(e.getSequenceNumber())
+		+ FileSystemFrameQueue.MINUS
+		+ Long.toString(e.getDurationNanos())
 		+ FileSystemFrameQueue.MINUS + this.name;
     }
 
@@ -238,17 +240,17 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
     }
 
     /**
-     * getSequenceNumberFromFilename.
+     * updateSegmentFromFilename.
      * 
-     * @param name2
-     * @return
+     * @param e
+     * @param filename
      */
-    private int getSequenceNumberFromFilename(final String name2) {
-	final String[] split = name2.split(FileSystemFrameQueue.MINUS);
-	if (split.length >= 3) {
-	    return Integer.parseInt(split[1]);
+    private void updateSegmentFromFilename(final S e, final String filename) {
+	final String[] split = filename.split(FileSystemFrameQueue.MINUS);
+	if (split.length >= 4) {
+	    e.setSequenceNumber(Integer.parseInt(split[1]));
+	    e.setDurationNanos(Long.parseLong(split[2]));
 	}
-	return 0;
     }
 
     /**
@@ -266,9 +268,7 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
 		final S deserialize = this.deserializer.deserialize(baos
 			.toByteArray());
 		deserialize.setId(file.getName());
-		deserialize
-			.setSequenceNumber(getSequenceNumberFromFilename(file
-				.getName()));
+		updateSegmentFromFilename(deserialize, file.getName());
 		return deserialize;
 	    } catch (final FileNotFoundException e) {
 		FileSystemFrameQueue.LOG.error(e.getLocalizedMessage(), e);
