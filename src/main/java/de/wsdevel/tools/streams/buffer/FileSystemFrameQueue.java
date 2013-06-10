@@ -42,6 +42,8 @@ import de.wsdevel.tools.streams.container.Segment;
 public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
 	extends AbstractQueue<S> implements Queue<S> {
 
+    private static final int MIN_LENGTH_FILENAME_SPLIT = 4;
+
     /**
      * Deserializer
      * 
@@ -97,13 +99,13 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
      * 
      * @param chunkURI
      *            {@link String}
-     * @param streamnodeConfigCacheDir
+     * @param cacheDir
      *            {@link String}
      * @return {@link File}
      */
     private static File createChunkFileForChunkURI(final String chunkURI,
-	    final File streamnodeConfigCacheDir) {
-	return new File(streamnodeConfigCacheDir.getAbsolutePath()
+	    final File cacheDir) {
+	return new File(cacheDir.getAbsolutePath()
 		+ File.separator
 		+ chunkURI.replaceAll(FileSystemFrameQueue.URL_BAD_CHAR_REGEXP,
 			FileSystemFrameQueue.URL_BAD_CHAR_REPLACEMENT));
@@ -247,7 +249,7 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
      */
     private void updateSegmentFromFilename(final S e, final String filename) {
 	final String[] split = filename.split(FileSystemFrameQueue.MINUS);
-	if (split.length >= 4) {
+	if (split.length >= MIN_LENGTH_FILENAME_SPLIT) {
 	    e.setSequenceNumber(Integer.parseInt(split[1]));
 	    e.setDurationNanos(Long.parseLong(split[2]));
 	}
@@ -416,7 +418,21 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
 	    final File[] listFiles = this.cacheDir.listFiles();
 	    for (final File file : listFiles) {
 		// clean cache directory (20130419 saw)
-		file.delete();
+		// 20130610 BUGFIX cache dir shouldn't be cleaned up since old
+		// chunks
+		// will be removed by the queue
+		// file.delete();
+		final String[] split = file.getName().split(
+			FileSystemFrameQueue.MINUS);
+		if (split.length >= MIN_LENGTH_FILENAME_SPLIT) {
+		    try {
+			// 20130610 add timestamp to queue
+			final long parseLong = Long.parseLong(split[0]);
+			this.timestamps.add(parseLong);
+		    } catch (NumberFormatException nfe) {
+			LOG.error(nfe.getLocalizedMessage(), nfe);
+		    }
+		}
 	    }
 	}
 	if (!this.cacheDir.exists() && !this.cacheDir.mkdirs()) {
