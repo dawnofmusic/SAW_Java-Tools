@@ -331,7 +331,9 @@ public class FileSystemFrameQueue<F extends Frame, S extends Segment<F>>
 			.currentTimeMillis()) {
 		    final File remove = this.chunkBuffer.remove(this.timestamps
 			    .poll());
-		    if (!remove.delete()) {
+		    if (remove != null && !remove.delete()) {
+			// 20130610 BUGFIX checking whether remove is null or
+			// not.
 			FileSystemFrameQueue.LOG
 				.error("Could not delete [" + remove.getAbsolutePath() + "]"); //$NON-NLS-1$//$NON-NLS-2$
 		    }
