@@ -242,6 +242,15 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	return this.bufferSize;
     }
 
+    private static final class Lock {
+    }
+
+    /** {@link Object} readingLock */
+    private final Object readingLock = new Lock();
+
+    /** {@link Object} writingLock */
+    private final Object writingLock = new Lock();
+
     /**
      * read.
      * 
@@ -250,17 +259,21 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     private F read() {
 	switch (getBevavior()) {
 	case trafficShapingBlockingBuffer:
-	    while (this.readBlocked) {
-		try {
-		    Thread.sleep(1000);
-		} catch (final InterruptedException e) {
+	    synchronized (readingLock) {
+		while (this.readBlocked) {
+		    try {
+			readingLock.wait(1000);
+		    } catch (InterruptedException e) {
+		    }
 		}
 	    }
 	    F poll = null;
-	    while ((poll = this.queue.poll()) == null) {
-		try {
-		    Thread.sleep(500);
-		} catch (final InterruptedException e) {
+	    synchronized (readingLock) {
+		while ((poll = this.queue.poll()) == null) {
+		    try {
+			readingLock.wait(1000);
+		    } catch (InterruptedException e) {
+		    }
 		}
 	    }
 	    if (this.waitUntil < 0) {
@@ -275,7 +288,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 				.getMillisPartFromNanos(nanosToSleep),
 				ShapingHelper
 					.getNanosRestFromNanos(nanosToSleep));
-		    } catch (final InterruptedException e) {
+		    } catch (InterruptedException e) {
 		    }
 		}
 	    }
@@ -283,10 +296,12 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    return poll;
 	case fastAccessRingBuffer:
 	default:
-	    while ((poll = this.queue.poll()) == null) {
-		try {
-		    Thread.sleep(500);
-		} catch (InterruptedException e) {
+	    synchronized (readingLock) {
+		while ((poll = this.queue.poll()) == null) {
+		    try {
+			readingLock.wait(1000);
+		    } catch (InterruptedException e) {
+		    }
 		}
 	    }
 	    if (poll != null) {
@@ -301,7 +316,10 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      */
     @Override
     public void unblockReadAccess() {
-	this.readBlocked = false;
+	synchronized (readingLock) {
+	    this.readBlocked = false;
+	    readingLock.notifyAll();
+	}
     }
 
     /**
@@ -309,7 +327,11 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      */
     @Override
     public void unblockWriteAccess() {
-	this.writeBlocked = false;
+	synchronized (writingLock) {
+	    this.writeBlocked = false;
+	    writingLock.notifyAll();
+
+	}
     }
 
     /**
@@ -321,20 +343,28 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     private void write(final F frame) {
 	switch (getBevavior()) {
 	case trafficShapingBlockingBuffer:
-	    while (this.writeBlocked
-		    || (this.bufferSize > getMaximumBufferSize())) {
-		try {
-		    Thread.sleep(1000);
-		} catch (final InterruptedException e) {
+	    synchronized (writingLock) {
+		while (this.writeBlocked
+			|| (this.bufferSize > getMaximumBufferSize())) {
+		    try {
+			writingLock.wait(1000);
+		    } catch (final InterruptedException e) {
+		    }
+		}
+		synchronized (readingLock) {
+		    this.queue.add(frame);
+		    this.bufferSize += frame.getSize();
+		    readingLock.notifyAll();
 		}
 	    }
-	    this.queue.add(frame);
-	    this.bufferSize += frame.getSize();
 	    break;
 	case fastAccessRingBuffer:
 	default:
-	    this.queue.add(frame);
-	    this.bufferSize += frame.getSize();
+	    synchronized (readingLock) {
+		this.queue.add(frame);
+		this.bufferSize += frame.getSize();
+		readingLock.notifyAll();
+	    }
 	    while (this.bufferSize > getMaximumBufferSize()) {
 		// read frames to dev null (20130424 saw)
 		read();
