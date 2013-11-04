@@ -161,14 +161,16 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	}
 	final S sFromFile = this.queue.getSFromFile(this.queue.chunkBuffer
 		.get(ts));
-	if (this.offsetChanged && (this.lastSequenceNumber > -1)) {
-	    this.sequenceNumberOffset = sFromFile.getSequenceNumber()
-		    - this.lastSequenceNumber - 1;
-	    this.offsetChanged = false;
+	if (sFromFile != null) {
+	    if (this.offsetChanged && (this.lastSequenceNumber > -1)) {
+		this.sequenceNumberOffset = sFromFile.getSequenceNumber()
+			- this.lastSequenceNumber - 1;
+		this.offsetChanged = false;
+	    }
+	    sFromFile.setSequenceNumber(sFromFile.getSequenceNumber()
+		    - this.sequenceNumberOffset);
+	    this.lastSequenceNumber = sFromFile.getSequenceNumber();
 	}
-	sFromFile.setSequenceNumber(sFromFile.getSequenceNumber()
-		- this.sequenceNumberOffset);
-	this.lastSequenceNumber = sFromFile.getSequenceNumber();
 	return sFromFile;
     }
 

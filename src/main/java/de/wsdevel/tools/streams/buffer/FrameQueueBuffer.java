@@ -252,14 +252,14 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	case trafficShapingBlockingBuffer:
 	    while (this.readBlocked) {
 		try {
-		    Thread.sleep(100);
+		    Thread.sleep(1000);
 		} catch (final InterruptedException e) {
 		}
 	    }
 	    F poll = null;
 	    while ((poll = this.queue.poll()) == null) {
 		try {
-		    Thread.sleep(100);
+		    Thread.sleep(500);
 		} catch (final InterruptedException e) {
 		}
 	    }
@@ -283,7 +283,12 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    return poll;
 	case fastAccessRingBuffer:
 	default:
-	    poll = this.queue.poll();
+	    while ((poll = this.queue.poll()) == null) {
+		try {
+		    Thread.sleep(500);
+		} catch (InterruptedException e) {
+		}
+	    }
 	    if (poll != null) {
 		this.bufferSize -= poll.getSize();
 	    }
@@ -319,7 +324,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    while (this.writeBlocked
 		    || (this.bufferSize > getMaximumBufferSize())) {
 		try {
-		    Thread.sleep(100);
+		    Thread.sleep(1000);
 		} catch (final InterruptedException e) {
 		}
 	    }
