@@ -14,8 +14,9 @@ package de.wsdevel.tools.streams.buffer;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,9 +45,11 @@ public abstract class Buffer {
      */
     private long maximumBufferSize = -1;
 
-    /** {@link Timer} The stateCheckTimer. */
-    private static Timer stateCheckTimer = new Timer(
-	    "Circular-Buffer-State-Checker"); //$NON-NLS-1$
+    /**
+     * {@link ScheduledExecutorService} stateCheckTimer
+     */
+    private static ScheduledExecutorService stateCheckTimer = Executors
+	    .newScheduledThreadPool(4);
 
     /** {@link Log} The LOG. */
     private static final Log LOG = LogFactory.getLog(Buffer.class);
@@ -72,13 +75,12 @@ public abstract class Buffer {
     public Buffer(final long maximumBufferSizeVal) {
 	this.pcs = new PropertyChangeSupport(this);
 	setMaximumBufferSize(maximumBufferSizeVal);
-
-	Buffer.stateCheckTimer.schedule(new TimerTask() {
+	Buffer.stateCheckTimer.scheduleAtFixedRate(new Runnable() {
 	    @Override
 	    public void run() {
 		checkStatus();
 	    }
-	}, 0, 200);
+	}, 0, 200, TimeUnit.MILLISECONDS);
     }
 
     /**
