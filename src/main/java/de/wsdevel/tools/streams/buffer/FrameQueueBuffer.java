@@ -17,7 +17,8 @@
 package de.wsdevel.tools.streams.buffer;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import de.wsdevel.tools.streams.container.ContainerInputStream;
 import de.wsdevel.tools.streams.container.ContainerOutputStream;
@@ -51,12 +52,19 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	 * @return
 	 */
 	S createSegment(F[] frames);
+
+	/**
+	 * getMaxFrameSize.
+	 * 
+	 * @return <code>int</code>
+	 */
+	int getMaxFrameSize();
     }
 
     /**
-     * {@link ConcurrentLinkedQueue}<T> queue
+     * {@link Queue}<T> queue
      */
-    private final ConcurrentLinkedQueue<F> queue;
+    private final Queue<F> queue;
 
     /**
      * {@link int} bufferSize
@@ -99,7 +107,14 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	super(maxBufferSizeVal);
 	this.segmentFactory = segmentFactoryRef;
 	setBevavior(BufferBehavior.fastAccessRingBuffer);
-	this.queue = new ConcurrentLinkedQueue<F>();
+	// (20131105 saw) selection of best performing queues. For us
+	// ArrayBlockingQueue should be the best selection.
+	// this.queue = new ConcurrentLinkedQueue<F>();
+	// this.queue = new LinkedBlockingQueue<F>();
+
+	final int maxElements = Math.round(1.1f * maxBufferSizeVal
+		/ segmentFactoryRef.getMaxFrameSize());
+	this.queue = new ArrayBlockingQueue<F>(maxElements);
 	this.cos = new ContainerOutputStream<F, S>(null) {
 	    @Override
 	    public void close() throws IOException {
