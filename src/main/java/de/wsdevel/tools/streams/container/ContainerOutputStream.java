@@ -130,8 +130,17 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
      * @throws IOException
      */
     public void writeSegment(final S segment) throws IOException {
-	for (F t : segment.getFrames()) {
-	    writeFrame(t);
+	if (segment == null) {
+	    throw new NullPointerException("segment MUSt NOT be null!");
+	}
+	synchronized (segment) {
+	    for (F t : segment.getFrames()) {
+		if (t != null) {
+		    // (20131107 saw) actually this should never happen, but
+		    // sometimes...
+		    writeFrame(t);
+		}
+	    }
 	}
     }
 
@@ -148,9 +157,16 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
      */
     public void writeFrames(final F[] frames, final int off, final int len)
 	    throws IOException {
-	for (int i = off; i < (off + len); i++) {
-	    if (frames[i] != null) {
-		writeFrame(frames[i]);
+	if (frames == null) {
+	    throw new NullPointerException("frames MUSt NOT be null!");
+	}
+	synchronized (frames) {
+	    for (int i = off; i < (off + len); i++) {
+		if (frames[i] != null) {
+		    // (20131107 saw) actually this should never happen, but
+		    // sometimes...
+		    writeFrame(frames[i]);
+		}
 	    }
 	}
     }
