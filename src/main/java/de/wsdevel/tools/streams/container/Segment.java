@@ -162,7 +162,9 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
 	case deserialized:
 	    long duration = 0;
 	    for (final Frame frame : this.frames) {
-		duration += frame.getDurationNanos();
+		if (frame != null) {
+		    duration += frame.getDurationNanos();
+		}
 	    }
 	    return duration;
 	case both:
@@ -264,6 +266,8 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
 			/ getFrames().length;
 		for (final Frame frame : this.frames) {
 		    if (frame != null) {
+			// SEBASTIAN if a frame is null the whole calculation is
+			// wrong. check for null has to be done first!
 			frame.setDurationNanos(nanosPerFrame);
 		    }
 		}
