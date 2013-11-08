@@ -356,6 +356,9 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      *            <code>T</code>
      */
     private void write(final F frame) {
+	if (frame == null) {
+	    throw new NullPointerException("frame MUST NOT be null.");
+	}
 	switch (getBevavior()) {
 	case trafficShapingBlockingBuffer:
 	    synchronized (writingLock) {
@@ -366,25 +369,59 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		    } catch (final InterruptedException e) {
 		    }
 		}
-		synchronized (readingLock) {
-		    this.queue.add(frame);
-		    this.bufferSize += frame.getSize();
-		    readingLock.notifyAll();
-		}
+		internalShapingWrite(frame);
 	    }
 	    break;
 	case fastAccessRingBuffer:
 	default:
 	    synchronized (readingLock) {
-		this.queue.add(frame);
-		this.bufferSize += frame.getSize();
-		readingLock.notifyAll();
-	    }
-	    while (this.bufferSize > getMaximumBufferSize()) {
-		// read frames to dev null (20130424 saw)
-		read();
+		internalFastWrite(frame);
+		while (this.bufferSize > getMaximumBufferSize()) {
+		    // read frames to dev null (20130424 saw)
+		    read();
+		}
 	    }
 	    break;
+	}
+    }
+
+    /**
+     * internalShapingWrite.
+     * 
+     * @param frame
+     */
+    private void internalShapingWrite(final F frame) {
+	synchronized (readingLock) {
+	    if (this.queue.offer(frame)) {
+		this.bufferSize += frame.getSize();
+		readingLock.notifyAll();
+	    } else {
+		// (20131108 saw) queue is full
+		unblockReadAccess();
+		try {
+		    Thread.sleep(250);
+		} catch (InterruptedException e) {
+		}
+		internalShapingWrite(frame);
+		// SEBASTIAN recursive call could cause trouble
+	    }
+	}
+    }
+
+    /**
+     * internalFastWrite.
+     * 
+     * @param frame
+     */
+    private void internalFastWrite(final F frame) {
+	if (this.queue.offer(frame)) {
+	    this.bufferSize += frame.getSize();
+	    readingLock.notifyAll();
+	} else {
+	    // read frames to dev null (20131108 saw)
+	    read();
+	    // SEBASTIAN recursive call could cause trouble
+	    internalFastWrite(frame);
 	}
     }
 
