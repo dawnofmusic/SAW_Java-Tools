@@ -398,12 +398,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    } else {
 		// (20131108 saw) queue is full
 		unblockReadAccess();
-		try {
-		    Thread.sleep(250);
-		} catch (InterruptedException e) {
-		}
-		internalShapingWrite(frame);
-		// SEBASTIAN recursive call could cause trouble
+		// SEBASTIAN frame is lost, improvements?
 	    }
 	}
     }
@@ -420,8 +415,6 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	} else {
 	    // read frames to dev null (20131108 saw)
 	    read();
-	    // SEBASTIAN recursive call could cause trouble
-	    internalFastWrite(frame);
 	}
     }
 
