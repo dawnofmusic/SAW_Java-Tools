@@ -17,8 +17,8 @@
 package de.wsdevel.tools.streams.buffer;
 
 import java.io.IOException;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import de.wsdevel.tools.streams.container.ContainerInputStream;
 import de.wsdevel.tools.streams.container.ContainerOutputStream;
@@ -62,9 +62,9 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     }
 
     /**
-     * {@link Queue}<T> queue
+     * {@link BlockingQueue}<T> queue
      */
-    private final Queue<F> queue;
+    private final BlockingQueue<F> queue;
 
     /**
      * {@link int} bufferSize
@@ -282,48 +282,44 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		    }
 		}
 	    }
-	    F poll = null;
-	    synchronized (readingLock) {
-		while ((poll = this.queue.poll()) == null) {
-		    try {
-			readingLock.wait(1000);
-		    } catch (InterruptedException e) {
+	    try {
+		F poll = this.queue.take();
+		if (this.waitUntil < 0) {
+		    // first visit, initialize
+		    this.waitUntil = System.nanoTime()
+			    + poll.getDurationNanos();
+		} else {
+		    final long nanosToSleep = this.waitUntil
+			    - System.nanoTime();
+		    this.waitUntil += poll.getDurationNanos();
+		    if (nanosToSleep > 0) {
+			try {
+			    Thread.sleep(
+				    ShapingHelper
+					    .getMillisPartFromNanos(nanosToSleep),
+				    ShapingHelper
+					    .getNanosRestFromNanos(nanosToSleep));
+			} catch (InterruptedException e) {
+			}
 		    }
 		}
+		this.bufferSize -= poll.getSize();
+		return poll;
+	    } catch (InterruptedException e) {
 	    }
-	    if (this.waitUntil < 0) {
-		// first visit, initialize
-		this.waitUntil = System.nanoTime() + poll.getDurationNanos();
-	    } else {
-		final long nanosToSleep = this.waitUntil - System.nanoTime();
-		this.waitUntil += poll.getDurationNanos();
-		if (nanosToSleep > 0) {
-		    try {
-			Thread.sleep(ShapingHelper
-				.getMillisPartFromNanos(nanosToSleep),
-				ShapingHelper
-					.getNanosRestFromNanos(nanosToSleep));
-		    } catch (InterruptedException e) {
-		    }
-		}
-	    }
-	    this.bufferSize -= poll.getSize();
-	    return poll;
 	case fastAccessRingBuffer:
 	default:
-	    synchronized (readingLock) {
-		while ((poll = this.queue.poll()) == null) {
-		    try {
-			readingLock.wait(1000);
-		    } catch (InterruptedException e) {
-		    }
+	    try {
+		F poll = this.queue.take();
+		if (poll != null) {
+		    this.bufferSize -= poll.getSize();
 		}
+		return poll;
+	    } catch (InterruptedException e) {
 	    }
-	    if (poll != null) {
-		this.bufferSize -= poll.getSize();
-	    }
-	    return poll;
 	}
+	// will happen only in case of being interrupted
+	return null;
     }
 
     /**

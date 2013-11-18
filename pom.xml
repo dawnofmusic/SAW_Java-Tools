@@ -1,19 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<groupId>de.wsdevel</groupId>
 	<artifactId>SAW_Java-Tools</artifactId>
 	<version>1.0.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
-
 	<name>SAW_Java-Tools</name>
 	<url>http://dawnofmusic.github.com/SAW_Java-Tools</url>
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -27,12 +23,10 @@
 			<version>1.1.1</version>
 		</dependency>
 	</dependencies>
-
 	<organization>
 		<name>Sebastian A. Weiß</name>
 		<url>http://www.sebastian-weiss.de</url>
 	</organization>
-
 	<build>
 		<extensions>
 			<extension>
@@ -41,8 +35,18 @@
 				<version>1.0-alpha-6</version>
 			</extension>
 		</extensions>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.0</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
-
 	<distributionManagement>
 		<repository>
 			<id>ftp-repo</id>
@@ -53,5 +57,4 @@
 			<url>ftp://sebastian-weiss.de/public_html/mvn-repo/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
-
 </project>
