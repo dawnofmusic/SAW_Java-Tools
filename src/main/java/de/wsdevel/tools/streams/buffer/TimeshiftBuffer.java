@@ -51,9 +51,9 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     private int offset = 0;
 
     /**
-     * {@link FileSystemFrameQueue<F,S>} queue
+     * {@link SegmentCache}<F,S> queue
      */
-    private final FileSystemFrameQueue<F, S> queue;
+    private final SegmentCache<F, S> queue;
 
     /**
      * {@link S} currentSegment
@@ -91,7 +91,7 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      * 
      * @param queueRef
      */
-    public TimeshiftBuffer(final FileSystemFrameQueue<F, S> queueRef,
+    public TimeshiftBuffer(final SegmentCache<F, S> queueRef,
 	    final FrameQueueBuffer.SegmentFactory<F, S> factoryRef) {
 	this.queue = queueRef;
 	this.factory = factoryRef;
@@ -159,8 +159,7 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 	if (ts == null) {
 	    return null;
 	}
-	final S sFromFile = this.queue.getSFromFile(this.queue.chunkBuffer
-		.get(ts));
+	final S sFromFile = this.queue.getSegmentForTimestamp(ts);
 	if (sFromFile != null) {
 	    if (this.offsetChanged && (this.lastSequenceNumber > -1)) {
 		this.sequenceNumberOffset = sFromFile.getSequenceNumber()
