@@ -26,11 +26,6 @@ public class Graph {
     private static final Log LOG = LogFactory.getLog(Graph.class);
 
     /**
-     * {@link GraphListenerSupport} COMMENT.
-     */
-    private final GraphListenerSupport gls = new GraphListenerSupport();
-
-    /**
      */
     private double maxA = 0;
 
@@ -57,15 +52,6 @@ public class Graph {
      * Graph constructor.
      */
     public Graph() {
-    }
-
-    /**
-     * @param listener
-     *            {@link GraphListener}
-     * @see de.wsdevel.tools.math.GraphListenerSupport#addListener(de.wsdevel.tools.math.GraphListener)
-     */
-    public final void addListener(final GraphListener listener) {
-	this.gls.addListener(listener);
     }
 
     /**
@@ -96,7 +82,6 @@ public class Graph {
 		}
 	    }
 	}
-	this.gls.fireGraphChanged();
     }
 
     /**
@@ -165,15 +150,6 @@ public class Graph {
      */
     public final ArrayBlockingQueue<ValueTuple> getTuples() {
 	return this.tuples;
-    }
-
-    /**
-     * @param listener
-     *            {@link GraphListener}
-     * @see de.wsdevel.tools.math.GraphListenerSupport#removeListener(de.wsdevel.tools.math.GraphListener)
-     */
-    public final void removeListener(final GraphListener listener) {
-	this.gls.removeListener(listener);
     }
 
     /**

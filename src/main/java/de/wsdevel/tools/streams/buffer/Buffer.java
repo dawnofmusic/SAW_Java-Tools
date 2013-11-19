@@ -21,10 +21,16 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import de.wsdevel.tools.math.Graph;
+import de.wsdevel.tools.math.ValueTuple;
+
 /**
  * Buffer
  */
 public abstract class Buffer {
+
+    /** {@link Log} The LOG. */
+    private static final Log LOG = LogFactory.getLog(Buffer.class);
 
     /** {@link String} The PROPERTY_NAME_MAXIMUM_BUFFER_SIZE. */
     private static final String PROPERTY_NAME_MAXIMUM_BUFFER_SIZE = "maximumBufferSize";
@@ -32,11 +38,22 @@ public abstract class Buffer {
     /** {@link String} The PROPERTY_NAME_STATE. */
     public static final String PROPERTY_NAME_STATE = "state"; //$NON-NLS-1$
 
-    /** {@link BufferState} The state. */
-    private BufferState state = BufferState.filling;
+    /**
+     * {@link ScheduledExecutorService} stateCheckTimer
+     */
+    private static ScheduledExecutorService stateCheckTimer = Executors
+	    .newScheduledThreadPool(4);
 
-    /** {@link PropertyChangeSupport} The pcs. */
-    protected final PropertyChangeSupport pcs;
+    /** {@link int} The _50PercentTreshold. */
+    private int _50PercentTreshold;
+
+    /** {@link BufferBehavior} The bevavior. */
+    private BufferBehavior bevavior;
+
+    /**
+     * {@link Graph} fillingLevelHistory
+     */
+    private final Graph fillingLevelHistory;
 
     /**
      * bufferSize.
@@ -45,26 +62,22 @@ public abstract class Buffer {
      */
     private long maximumBufferSize = -1;
 
-    /**
-     * {@link ScheduledExecutorService} stateCheckTimer
-     */
-    private static ScheduledExecutorService stateCheckTimer = Executors
-	    .newScheduledThreadPool(4);
-
-    /** {@link Log} The LOG. */
-    private static final Log LOG = LogFactory.getLog(Buffer.class);
+    /** {@link PropertyChangeSupport} The pcs. */
+    protected final PropertyChangeSupport pcs;
 
     /** {@link int} The preFill. */
     private int preFillTreshold;
 
-    /** {@link int} The _50PercentTreshold. */
-    private int _50PercentTreshold;
-
     /** {@link int} The preFill. */
     private int readingTreshold;
 
-    /** {@link BufferBehavior} The bevavior. */
-    private BufferBehavior bevavior;
+    /**
+     * {@link long} startMillis
+     */
+    private final long startMillis;
+
+    /** {@link BufferState} The state. */
+    private BufferState state = BufferState.filling;
 
     /**
      * Buffer constructor.
@@ -75,6 +88,9 @@ public abstract class Buffer {
     public Buffer(final long maximumBufferSizeVal) {
 	this.pcs = new PropertyChangeSupport(this);
 	setMaximumBufferSize(maximumBufferSizeVal);
+	this.fillingLevelHistory = new Graph();
+	this.fillingLevelHistory.setMaxNumberOfValues(300);
+	this.startMillis = System.currentTimeMillis();
 	Buffer.stateCheckTimer.scheduleAtFixedRate(new Runnable() {
 	    @Override
 	    public void run() {
@@ -175,6 +191,13 @@ public abstract class Buffer {
      * @return {@code long} the current number of bytes used by this buffer;
      */
     public abstract long getCurrentBytes();
+
+    /**
+     * @return the {@link Graph} fillingLevelHistory
+     */
+    public Graph getFillingLevelHistory() {
+	return this.fillingLevelHistory;
+    }
 
     /**
      * Returns the maximumBufferSize.
@@ -288,6 +311,25 @@ public abstract class Buffer {
      * unblockWriteAccess.
      */
     public abstract void unblockWriteAccess();
+
+    /**
+     * {@link int} updateCount
+     */
+    private int updateCount = 0;
+
+    /**
+     * updateFilingLevelHistory.
+     */
+    protected void updateFilingLevelHistory() {
+	updateCount++;
+	if (updateCount % 1000 == 0) {
+	    updateCount = 0;
+	    final ValueTuple tuple = new ValueTuple(
+		    (System.currentTimeMillis() - this.startMillis) / 1000d,
+		    (100 * getCurrentBytes()) / (double) getMaximumBufferSize());
+	    this.fillingLevelHistory.addTuple(tuple);
+	}
+    }
 
 }
 // ============[VERSION-CONTROL-LOG-START]==============
