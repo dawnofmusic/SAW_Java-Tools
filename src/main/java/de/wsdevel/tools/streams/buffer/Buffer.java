@@ -313,22 +313,13 @@ public abstract class Buffer {
     public abstract void unblockWriteAccess();
 
     /**
-     * {@link int} updateCount
-     */
-    private int updateCount = 0;
-
-    /**
      * updateFilingLevelHistory.
      */
-    protected void updateFilingLevelHistory() {
-	updateCount++;
-	if (updateCount % 1000 == 0) {
-	    updateCount = 0;
-	    final ValueTuple tuple = new ValueTuple(
-		    (System.currentTimeMillis() - this.startMillis) / 1000d,
-		    (100 * getCurrentBytes()) / (double) getMaximumBufferSize());
-	    this.fillingLevelHistory.addTuple(tuple);
-	}
+    protected void updateFillingLevelHistory() {
+	final ValueTuple tuple = new ValueTuple(
+		(System.currentTimeMillis() - this.startMillis) / 1000d,
+		(100 * getCurrentBytes()) / (double) getMaximumBufferSize());
+	this.fillingLevelHistory.addTuple(tuple);
     }
 
 }

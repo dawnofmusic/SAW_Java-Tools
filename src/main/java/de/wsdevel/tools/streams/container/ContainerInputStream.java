@@ -108,29 +108,30 @@ public abstract class ContainerInputStream<F extends Frame, S extends Segment<F>
 	return this.innerIs.read(b, off, len);
     }
 
-    /**
-     * readFrame.
-     * 
-     * @return <code>T</code>
-     * @throws IOException
-     */
-    public abstract F readFrame() throws IOException;
-
-    /**
-     * readFrames.
-     * 
-     * @param frames
-     *            <code>T[]</code> to store frames into.
-     * @param off
-     *            <code>int</code> offset to start writing from.
-     * @param len
-     *            <code>int</code> number of frames to be read.
-     * @return <code>int</code> the number of frames read or <code>-1</code> if
-     *         end of stream was reached.
-     * @throws IOException
-     */
-    public abstract int readFrames(F[] frames, int off, int len)
-	    throws IOException;
+    // /**
+    // * readFrame.
+    // *
+    // * @return <code>T</code>
+    // * @throws IOException
+    // */
+    // public abstract F readFrame() throws IOException;
+    //
+    // /**
+    // * readFrames.
+    // *
+    // * @param frames
+    // * <code>T[]</code> to store frames into.
+    // * @param off
+    // * <code>int</code> offset to start writing from.
+    // * @param len
+    // * <code>int</code> number of frames to be read.
+    // * @return <code>int</code> the number of frames read or <code>-1</code>
+    // if
+    // * end of stream was reached.
+    // * @throws IOException
+    // */
+    // public abstract int readFrames(F[] frames, int off, int len)
+    // throws IOException;
 
     /**
      * readSegment.

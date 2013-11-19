@@ -85,9 +85,9 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     private final ContainerOutputStream<F, S> cos;
 
     /**
-     * {@link BlockingQueue}<T> queue
+     * {@link BlockingQueue}<S> queue
      */
-    private final BlockingQueue<F> queue;
+    private final BlockingQueue<S> queue;
 
     /** {@link boolean} The readBlocked. */
     private boolean readBlocked = false;
@@ -95,8 +95,8 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     /** {@link Object} readingLock */
     private final Object readingLock = new Lock();
 
-    /** {@link SegmentFactory<T>} The segmentFactory. */
-    private final SegmentFactory<F, S> segmentFactory;
+    // /** {@link SegmentFactory<T>} The segmentFactory. */
+    // private final SegmentFactory<F, S> segmentFactory;
 
     /** {@link long} The lastTimestamp. */
     private long waitUntil = -1;
@@ -114,7 +114,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    final SegmentFactory<F, S> segmentFactoryRef,
 	    final boolean closeableCIS) {
 	super(maxBufferSizeVal);
-	this.segmentFactory = segmentFactoryRef;
+	// this.segmentFactory = segmentFactoryRef;
 	setBevavior(BufferBehavior.fastAccessRingBuffer);
 	// (20131105 saw) selection of best performing queues. For us
 	// ArrayBlockingQueue should be the best selection.
@@ -123,7 +123,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 
 	final int maxElements = Math.round((1.1f * maxBufferSizeVal)
 		/ segmentFactoryRef.getMaxFrameSize());
-	this.queue = new ArrayBlockingQueue<F>(maxElements);
+	this.queue = new ArrayBlockingQueue<S>(maxElements);
 	this.cos = new ContainerOutputStream<F, S>(null) {
 	    @Override
 	    public void close() throws IOException {
@@ -134,21 +134,28 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    public void flush() throws IOException {
 	    }
 
-	    @Override
-	    public void writeFrame(final F frame) throws IOException {
-		checkClosed();
-		FrameQueueBuffer.this.write(frame);
-		// System.out.println("wrote frame. size: " + queue.size());
-	    }
+	    // @Override
+	    // public void writeFrame(final F frame) throws IOException {
+	    // checkClosed();
+	    // FrameQueueBuffer.this.write(frame);
+	    // // System.out.println("wrote frame. size: " + queue.size());
+	    // }
 
 	    @Override
-	    public void writeFrames(final F[] frames, final int off,
-		    final int len) throws IOException {
+	    public void writeSegment(S segment) throws IOException {
 		checkClosed();
-		for (int i = off; (i < frames.length) && (i < (off + len)); i++) {
-		    writeFrame(frames[i]);
-		}
+		FrameQueueBuffer.this.write(segment);
 	    }
+
+	    // @Override
+	    // public void writeFrames(final F[] frames, final int off,
+	    // final int len) throws IOException {
+	    // checkClosed();
+	    // for (int i = off; (i < frames.length) && (i < (off + len)); i++)
+	    // {
+	    // writeFrame(frames[i]);
+	    // }
+	    // }
 	};
 	this.cis = new ContainerInputStream<F, S>(null) {
 	    @Override
@@ -158,39 +165,43 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		}
 	    }
 
-	    @Override
-	    public F readFrame() throws IOException {
-		checkClosed();
-		// System.out.println("read frame size: " + queue.size());
-		return FrameQueueBuffer.this.read();
-	    }
-
-	    @Override
-	    public int readFrames(final F[] frames, final int off, final int len)
-		    throws IOException {
-		checkClosed();
-		int count = 0;
-		for (int i = off; (i < frames.length) && (i < (off + len)); i++) {
-		    frames[i] = readFrame();
-		    count++;
-		}
-		// never return -1! Since this buffer could get empty but filled
-		// afterwards, we would stop any communication (20130428 saw)
-		// if (count == 0) {
-		// return -1;
-		// }
-		return count;
-	    }
+	    // @Override
+	    // public F readFrame() throws IOException {
+	    // checkClosed();
+	    // // System.out.println("read frame size: " + queue.size());
+	    // return (F) FrameQueueBuffer.this.read();
+	    // }
+	    //
+	    // @Override
+	    // public int readFrames(final F[] frames, final int off, final int
+	    // len)
+	    // throws IOException {
+	    // checkClosed();
+	    // int count = 0;
+	    // for (int i = off; (i < frames.length) && (i < (off + len)); i++)
+	    // {
+	    // frames[i] = readFrame();
+	    // count++;
+	    // }
+	    // // never return -1! Since this buffer could get empty but filled
+	    // // afterwards, we would stop any communication (20130428 saw)
+	    // // if (count == 0) {
+	    // // return -1;
+	    // // }
+	    // return count;
+	    // }
 
 	    @Override
 	    public S readSegment(final int numberOfFrames) throws IOException {
 		checkClosed();
-		final F[] frames = FrameQueueBuffer.this.segmentFactory
-			.createFrameArray(numberOfFrames);
-		readFrames(frames, 0, numberOfFrames);
-		// SEBASTIAN potential bug. Could be less frames than requested.
-		return FrameQueueBuffer.this.segmentFactory
-			.createSegment(frames);
+		return FrameQueueBuffer.this.read();
+		// final F[] frames = FrameQueueBuffer.this.segmentFactory
+		// .createFrameArray(numberOfFrames);
+		// readFrames(frames, 0, numberOfFrames);
+		// // SEBASTIAN potential bug. Could be less frames than
+		// requested.
+		// return FrameQueueBuffer.this.segmentFactory
+		// .createSegment(frames);
 	    }
 	};
     }
@@ -229,7 +240,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	this.queue.clear();
 	this.bufferSize = 0;
 	this.waitUntil = -1;
-	updateFilingLevelHistory();
+	updateFillingLevelHistory();
     }
 
     /**
@@ -272,10 +283,10 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * 
      * @param frame
      */
-    private void internalFastWrite(final F frame) {
+    private void internalFastWrite(final S frame) {
 	if (this.queue.offer(frame)) {
 	    this.bufferSize += frame.getSize();
-	    updateFilingLevelHistory();
+	    updateFillingLevelHistory();
 	    this.readingLock.notifyAll();
 	} else {
 	    // read frames to dev null (20131108 saw)
@@ -288,11 +299,11 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * 
      * @param frame
      */
-    private void internalShapingWrite(final F frame) {
+    private void internalShapingWrite(final S frame) {
 	synchronized (this.readingLock) {
 	    if (this.queue.offer(frame)) {
 		this.bufferSize += frame.getSize();
-		updateFilingLevelHistory();
+		updateFillingLevelHistory();
 		this.readingLock.notifyAll();
 	    } else {
 		// (20131108 saw) queue is full
@@ -307,7 +318,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * 
      * @return <code>T</code>
      */
-    private F read() {
+    private S read() {
 	switch (getBevavior()) {
 	case trafficShapingBlockingBuffer:
 	    synchronized (this.readingLock) {
@@ -319,7 +330,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		}
 	    }
 	    try {
-		final F poll = this.queue.take();
+		final S poll = this.queue.take();
 		if (this.waitUntil < 0) {
 		    // first visit, initialize
 		    this.waitUntil = System.nanoTime()
@@ -340,17 +351,17 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		    }
 		}
 		this.bufferSize -= poll.getSize();
-		updateFilingLevelHistory();
+		updateFillingLevelHistory();
 		return poll;
 	    } catch (final InterruptedException e) {
 	    }
 	case fastAccessRingBuffer:
 	default:
 	    try {
-		final F poll = this.queue.take();
+		final S poll = this.queue.take();
 		if (poll != null) {
 		    this.bufferSize -= poll.getSize();
-		    updateFilingLevelHistory();
+		    updateFillingLevelHistory();
 		}
 		return poll;
 	    } catch (final InterruptedException e) {
@@ -389,7 +400,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * @param frame
      *            <code>T</code>
      */
-    private void write(final F frame) {
+    private void write(final S frame) {
 	if (frame == null) {
 	    throw new NullPointerException("frame MUST NOT be null.");
 	}

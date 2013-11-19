@@ -119,14 +119,16 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
      * 
      * @return <code>true</code> if deserialization was successful;
      */
-    public synchronized boolean deserialize(final Map<String, Object> hints) {
+    public boolean deserialize(final Map<String, Object> hints) {
 	if (getState().equals(SegmentState.binary) && (this.data != null)) {
-	    try {
-		this.frames = deserializeFrames(hints);
-		setState(SegmentState.both);
-		return true;
-	    } catch (final IOException e) {
-		Segment.LOG.error(e.getLocalizedMessage(), e);
+	    synchronized (lock) {
+		try {
+		    this.frames = deserializeFrames(hints);
+		    setState(SegmentState.both);
+		    return true;
+		} catch (final IOException e) {
+		    Segment.LOG.error(e.getLocalizedMessage(), e);
+		}
 	    }
 	}
 	return false;
@@ -160,13 +162,15 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     public long getDurationNanos() {
 	switch (this.state) {
 	case deserialized:
-	    long duration = 0;
-	    for (final Frame frame : this.frames) {
-		if (frame != null) {
-		    duration += frame.getDurationNanos();
+	    synchronized (lock) {
+		long duration = 0;
+		for (final Frame frame : this.frames) {
+		    if (frame != null) {
+			duration += frame.getDurationNanos();
+		    }
 		}
+		return duration;
 	    }
-	    return duration;
 	case both:
 	case binary:
 	default:
@@ -205,13 +209,15 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     public int getSize() {
 	switch (this.state) {
 	case deserialized:
-	    int size = 0;
-	    for (final Frame frame : this.frames) {
-		if (frame != null) {
-		    size += frame.getSize();
+	    synchronized (lock) {
+		int size = 0;
+		for (final Frame frame : this.frames) {
+		    if (frame != null) {
+			size += frame.getSize();
+		    }
 		}
+		return size;
 	    }
-	    return size;
 	case both:
 	case binary:
 	default:
@@ -237,15 +243,17 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
      * @param dataRef
      *            {@link byte[]} the data to set
      */
-    public synchronized void setData(final byte[] dataRef) {
+    public void setData(final byte[] dataRef) {
 	// SEBASTIAN implement Frame.getFrameSize
 	// if ((dataRef.length % MPEGTSFrame.TRANSPORT_PACKET_SIZE) != 0) {
 	// throw new IllegalArgumentException(
 	//        	    "length of dataRef must be n times " + MPEGTSFrame.TRANSPORT_PACKET_SIZE); //$NON-NLS-1$
 	// }
-	this.frames = null;
-	this.data = dataRef;
-	setState(SegmentState.binary);
+	synchronized (lock) {
+	    this.frames = null;
+	    this.data = dataRef;
+	    setState(SegmentState.binary);
+	}
     }
 
     /**
@@ -261,14 +269,17 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
 	switch (this.state) {
 	case deserialized:
 	case both:
-	    if ((getFrames().length > 0) && (durationNanosVal > 0)) {
-		final long nanosPerFrame = durationNanosVal
-			/ getFrames().length;
-		for (final Frame frame : this.frames) {
-		    if (frame != null) {
-			// SEBASTIAN if a frame is null the whole calculation is
-			// wrong. check for null has to be done first!
-			frame.setDurationNanos(nanosPerFrame);
+	    synchronized (lock) {
+		if ((getFrames().length > 0) && (durationNanosVal > 0)) {
+		    final long nanosPerFrame = durationNanosVal
+			    / getFrames().length;
+		    for (final Frame frame : this.frames) {
+			if (frame != null) {
+			    // SEBASTIAN if a frame is null the whole
+			    // calculation is
+			    // wrong. check for null has to be done first!
+			    frame.setDurationNanos(nanosPerFrame);
+			}
 		    }
 		}
 	    }
@@ -280,15 +291,23 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
     /**
+     * {@link Object} lock
+     */
+    private Object lock = new Object();
+
+    /**
      * @param framesRef
      *            {@link T[]} the frames to set
      */
-    public synchronized void setFrames(final T[] framesRef) {
+    public void setFrames(final T[] framesRef) {
 	if (framesRef == null) {
 	    throw new NullPointerException("framesRef must not be null!"); //$NON-NLS-1$
 	}
-	this.frames = framesRef;
-	setState(SegmentState.deserialized);
+	synchronized (lock) {
+	    this.data = null;
+	    this.frames = framesRef;
+	    setState(SegmentState.deserialized);
+	}
     }
 
     /**

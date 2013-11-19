@@ -140,41 +140,53 @@ public class ContainerTeeOutputStream<F extends Frame, S extends Segment<F>>
 	}
     }
 
-    /**
-     * writeFrame
-     * 
-     * @param frame
-     * @throws IOException
-     * @see de.wsdevel.tools.streams.container.ContainerOutputStream#writeFrame(de.wsdevel.tools.streams.container.Frame)
-     */
-    @Override
-    public void writeFrame(final F frame) throws IOException {
-	if (this.cos1 != null) {
-	    this.cos1.writeFrame(frame);
-	}
-	if (this.cos2 != null) {
-	    this.cos2.writeFrame(frame);
-	}
-    }
+    // /**
+    // * writeFrame
+    // *
+    // * @param frame
+    // * @throws IOException
+    // * @see
+    // de.wsdevel.tools.streams.container.ContainerOutputStream#writeFrame(de.wsdevel.tools.streams.container.Frame)
+    // */
+    // @Override
+    // public void writeFrame(final F frame) throws IOException {
+    // if (this.cos1 != null) {
+    // this.cos1.writeFrame(frame);
+    // }
+    // if (this.cos2 != null) {
+    // this.cos2.writeFrame(frame);
+    // }
+    // }
+    //
+    // /**
+    // * writeFrames
+    // *
+    // * @param frames
+    // * @param off
+    // * @param len
+    // * @throws IOException
+    // * @see
+    // de.wsdevel.tools.streams.container.ContainerOutputStream#writeFrames(F[],
+    // * int, int)
+    // */
+    // @Override
+    // public void writeFrames(final F[] frames, final int off, final int len)
+    // throws IOException {
+    // if (this.cos1 != null) {
+    // this.cos1.writeFrames(frames, off, len);
+    // }
+    // if (this.cos2 != null) {
+    // this.cos2.writeFrames(frames, off, len);
+    // }
+    // }
 
-    /**
-     * writeFrames
-     * 
-     * @param frames
-     * @param off
-     * @param len
-     * @throws IOException
-     * @see de.wsdevel.tools.streams.container.ContainerOutputStream#writeFrames(F[],
-     *      int, int)
-     */
     @Override
-    public void writeFrames(final F[] frames, final int off, final int len)
-	    throws IOException {
+    public void writeSegment(S segment) throws IOException {
 	if (this.cos1 != null) {
-	    this.cos1.writeFrames(frames, off, len);
+	    this.cos1.writeSegment(segment);
 	}
 	if (this.cos2 != null) {
-	    this.cos2.writeFrames(frames, off, len);
+	    this.cos2.writeSegment(segment);
 	}
     }
 

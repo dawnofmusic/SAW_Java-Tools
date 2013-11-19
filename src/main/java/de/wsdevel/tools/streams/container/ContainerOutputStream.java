@@ -119,8 +119,9 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
      *            <code>T</code>
      * @throws IOException
      */
-    public void writeFrame(final F frame) throws IOException {
-	this.innerOs.write(frame.toBytes());
+    private static void writeFrame(final OutputStream innerOs, final Frame frame)
+	    throws IOException {
+	innerOs.write(frame.toBytes());
     }
 
     /**
@@ -131,15 +132,23 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
      */
     public void writeSegment(final S segment) throws IOException {
 	if (segment == null) {
-	    throw new NullPointerException("segment MUSt NOT be null!");
+	    throw new NullPointerException("segment MUST NOT be null!");
 	}
 	synchronized (segment) {
-	    for (F t : segment.getFrames()) {
-		if (t != null) {
-		    // (20131107 saw) actually this should never happen, but
-		    // sometimes...
-		    writeFrame(t);
+	    switch (segment.getState()) {
+	    case deserialized:
+		for (F t : segment.getFrames()) {
+		    if (t != null) {
+			// (20131107 saw) actually this should never happen, but
+			// sometimes...
+			this.innerOs.write(t.toBytes());
+			// writeFrame(t);
+		    }
 		}
+	    case binary:
+	    case both:
+		this.innerOs.write(segment.getData());
+	    default:
 	    }
 	}
     }
@@ -155,7 +164,8 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
      *            <code>int</code> number of frames to write.
      * @throws IOException
      */
-    public void writeFrames(final F[] frames, final int off, final int len)
+    public static void writeFrames(final OutputStream innerOs,
+	    final Frame[] frames, final int off, final int len)
 	    throws IOException {
 	if (frames == null) {
 	    throw new NullPointerException("frames MUSt NOT be null!");
@@ -165,7 +175,7 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
 		if (frames[i] != null) {
 		    // (20131107 saw) actually this should never happen, but
 		    // sometimes...
-		    writeFrame(frames[i]);
+		    writeFrame(innerOs, frames[i]);
 		}
 	    }
 	}
