@@ -33,10 +33,27 @@ public class HeapSegmentCache<F extends Frame, S extends Segment<F>> extends
     private final TreeMap<Long, S> segmentStore = new TreeMap<Long, S>();
 
     /**
+     * {@link TreeMap<Integer,S>} segmentStoreBySequenceNumber
+     */
+    private final TreeMap<Integer, S> segmentStoreBySequenceNumber = new TreeMap<Integer, S>();
+
+    /**
      * HeapSegmentQueue constructor.
      */
     public HeapSegmentCache() {
 	setMaxDurationInMillis(60000);
+    }
+
+    /**
+     * getSegmentForSequenceNumber.
+     * 
+     * @see de.wsdevel.tools.streams.buffer.SegmentCache#getSegmentForSequenceNumber(int)
+     * @param sequenceNumber
+     * @return
+     */
+    @Override
+    public S getSegmentForSequenceNumber(final int sequenceNumber) {
+	return this.segmentStoreBySequenceNumber.get(sequenceNumber);
     }
 
     /**
@@ -76,13 +93,17 @@ public class HeapSegmentCache<F extends Frame, S extends Segment<F>> extends
 	    }
 	}
 	this.segmentStore.put(timestamp, e);
+	this.segmentStoreBySequenceNumber.put(e.getSequenceNumber(), e);
 	setLastOfferedTimestamp(timestamp);
 	this.timestamps.add(timestamp);
 	switch (getBehaviour()) {
 	case maxSizeFIFOQueue:
 	    final Long peek = this.timestamps.peek();
 	    if ((peek + getMaxDurationInMillis()) < System.currentTimeMillis()) {
-		this.segmentStore.remove(this.timestamps.poll());
+		final S remove = this.segmentStore.remove(this.timestamps
+			.poll());
+		this.segmentStoreBySequenceNumber.remove(remove
+			.getSequenceNumber());
 	    }
 	case growingQueue:
 	default:

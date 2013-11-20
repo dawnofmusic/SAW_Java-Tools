@@ -192,7 +192,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    // }
 
 	    @Override
-	    public S readSegment(final int numberOfFrames) throws IOException {
+	    public S readSegment() throws IOException {
 		checkClosed();
 		return FrameQueueBuffer.this.read();
 		// final F[] frames = FrameQueueBuffer.this.segmentFactory

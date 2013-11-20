@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 
 import org.apache.commons.logging.Log;
@@ -92,9 +93,14 @@ public class FileSystemSegmentCache<F extends Frame, S extends Segment<F>>
     private File cacheDir;
 
     /**
-     * {@link HashMap<Long,File>} chunkBuffer
+     * {@link HashMap<Long,File>} timestampRegistry
      */
-    final HashMap<Long, File> chunkRegistry = new HashMap<Long, File>();
+    final HashMap<Long, File> timestampRegistry = new HashMap<Long, File>();
+
+    /**
+     * {@link HashMap<Long,File>} sequenceNumberRegistry
+     */
+    final HashMap<Integer, File> sequenceNumberRegistry = new HashMap<Integer, File>();
 
     /**
      * FileSystemFrameQueue constructor.
@@ -147,6 +153,22 @@ public class FileSystemSegmentCache<F extends Frame, S extends Segment<F>>
     }
 
     /**
+     * getSequenceNumberFromFilename.
+     * 
+     * @param filename
+     * @return
+     * @throws ParseException
+     */
+    private int getSequenceNumberFromFilename(final String filename)
+	    throws ParseException {
+	final String[] split = filename.split(FileSystemSegmentCache.MINUS);
+	if (split.length >= MIN_LENGTH_FILENAME_SPLIT) {
+	    return Integer.parseInt(split[1]);
+	}
+	throw new ParseException("Invalid filename [" + filename + "]", -1);
+    }
+
+    /**
      * getTFromFile.
      * 
      * @param file
@@ -175,7 +197,8 @@ public class FileSystemSegmentCache<F extends Frame, S extends Segment<F>>
      * 
      * @see java.util.Queue#offer(java.lang.Object)
      * @param e
-     * @return
+     *            <code>S</code>
+     * @return <code>long</code>
      */
     public boolean offer(final S e, final long timestamp) {
 	final File file = createChunkFileForChunkURI(
@@ -192,15 +215,24 @@ public class FileSystemSegmentCache<F extends Frame, S extends Segment<F>>
 	}
 	if (writeSegmentToFS(e, file)) {
 	    setLastOfferedTimestamp(timestamp);
-	    this.chunkRegistry.put(timestamp, file);
+	    this.timestampRegistry.put(timestamp, file);
+	    this.sequenceNumberRegistry.put(e.getSequenceNumber(), file);
 	    this.timestamps.add(timestamp);
 	    switch (getBehaviour()) {
 	    case maxSizeFIFOQueue:
 		final Long peek = this.timestamps.peek();
 		if ((peek + getMaxDurationInMillis()) < System
 			.currentTimeMillis()) {
-		    final File remove = this.chunkRegistry
+		    final File remove = this.timestampRegistry
 			    .remove(this.timestamps.poll());
+		    try {
+			final int sequenceNumberFromFilename = getSequenceNumberFromFilename(remove
+				.getName());
+			this.sequenceNumberRegistry
+				.remove(sequenceNumberFromFilename);
+		    } catch (ParseException e1) {
+			LOG.error(e1.getLocalizedMessage(), e1);
+		    }
 		    if (remove != null && !remove.delete()) {
 			// 20130610 BUGFIX checking whether remove is null or
 			// not.
@@ -293,7 +325,19 @@ public class FileSystemSegmentCache<F extends Frame, S extends Segment<F>>
      */
     @Override
     public S getSegmentForTimestamp(Long timestamp) {
-	return getSFromFile(this.chunkRegistry.get(timestamp));
+	return getSFromFile(this.timestampRegistry.get(timestamp));
+    }
+
+    /**
+     * getSegmentForSequenceNumber.
+     * 
+     * @see de.wsdevel.tools.streams.buffer.SegmentCache#getSegmentForSequenceNumber(int)
+     * @param sequenceNumber
+     * @return
+     */
+    @Override
+    public S getSegmentForSequenceNumber(int sequenceNumber) {
+	return getSFromFile(this.sequenceNumberRegistry.get(sequenceNumber));
     }
 
 }

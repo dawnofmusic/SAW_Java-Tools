@@ -16,9 +16,6 @@
 
 package de.wsdevel.tools.streams.buffer;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,35 +27,20 @@ import de.wsdevel.tools.streams.container.Segment;
  */
 public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 
-    /**
-     * {@link FrameQueueBuffer.SegmentFactory<F,S>} factory
-     */
-    private final FrameQueueBuffer.SegmentFactory<F, S> factory;
+    // /**
+    // * {@link FrameQueueBuffer.SegmentFactory<F,S>} factory
+    // */
+    // private final FrameQueueBuffer.SegmentFactory<F, S> factory;
 
-    /**
-     * {@link LinkedList<Long>} knownTS
-     */
-    private LinkedList<Long> knownTS = null;
+    // /**
+    // * {@link LinkedList<Long>} knownTS
+    // */
+    // private LinkedList<Long> knownTS = null;
 
-    /**
-     * {@link Long} lastTS
-     */
-    private Long lastTS = 0l;
-
-    /**
-     * {@link int} offset
-     */
-    private int offset = 0;
-
-    /**
-     * {@link SegmentCache}<F,S> queue
-     */
-    private final SegmentCache<F, S> queue;
-
-    /**
-     * {@link S} currentSegment
-     */
-    private S currentSegment;
+    // /**
+    // * {@link Long} lastTS
+    // */
+    // private Long lastTS = 0l;
 
     /**
      * {@link Log} LOG
@@ -71,75 +53,106 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      */
     public static final int NANOS_IN_MILLIS = 1000 * 1000;
 
+    // /**
+    // * {@link S} currentSegment
+    // */
+    // private S currentSegment;
+
     /**
      * {@link int} lastSequenceNumber
      */
     private int lastSequenceNumber = -1;
 
     /**
-     * {@link int} sequenceNumberOffset
+     * {@link int} minOffset
      */
-    private int sequenceNumberOffset = 0;
+    private int minOffset = 0;
 
+    /**
+     * {@link int} offset
+     */
+    private int offset = 0;
+
+    // /**
+    // * {@link int} lastSequenceNumber
+    // */
+    // private int lastSequenceNumber = -1;
+    //
+    // /**
+    // * {@link int} sequenceNumberOffset
+    // */
+    // private int sequenceNumberOffset = 0;
+    //
     /**
      * {@link boolean} offsetChanged
      */
-    private boolean offsetChanged = false;
+    private boolean offsetChanged = true;
+
+    // /**
+    // * getOrCreateNewKnownTS.
+    // *
+    // * @return {@link Long}
+    // */
+    // private Long getNextTS() {
+    // if (this.knownTS == null) {
+    // final long now = System.currentTimeMillis();
+    // final long startTS = now + (this.offset * 1000);
+    // this.knownTS = new LinkedList<Long>(this.queue.timestamps);
+    // this.lastTS = 0l;
+    // while (this.lastTS < startTS) {
+    // this.lastTS = this.knownTS.pollFirst();
+    // if (this.lastTS == null) {
+    // this.lastTS = 0l;
+    // return null;
+    // }
+    // }
+    // return this.lastTS;
+    // }
+    // Long newVal = this.knownTS.poll();
+    // // SEBASTIAN maybe we should refresh the knownTS List earlier!
+    // if (newVal == null) {
+    // do {
+    // this.knownTS = new LinkedList<Long>(this.queue.timestamps);
+    // newVal = 0l;
+    // inner: while (newVal <= this.lastTS) {
+    // newVal = this.knownTS.pollFirst();
+    // if (newVal == null) {
+    // // no new timestamps yet, try it again
+    // try {
+    // Thread.sleep(1000);
+    // } catch (final InterruptedException e) {
+    // }
+    // break inner;
+    // }
+    // }
+    // } while (newVal == null);
+    // }
+    // this.lastTS = newVal;
+    // // System.out.println(DateFormat.getTimeInstance()
+    // // .format(new Date(lastTS)));
+    // return this.lastTS;
+    // }
 
     /**
-     * Timeshift constructor.
+     * {@link SegmentCache}<F,S> queue
+     */
+    private final SegmentCache<F, S> queue;
+
+    /**
+     * TimeshiftBuffer constructor.
      * 
      * @param queueRef
+     *            {@link SegmentCache}
      */
-    public TimeshiftBuffer(final SegmentCache<F, S> queueRef,
-	    final FrameQueueBuffer.SegmentFactory<F, S> factoryRef) {
+    public TimeshiftBuffer(final SegmentCache<F, S> queueRef) {
 	this.queue = queueRef;
-	this.factory = factoryRef;
     }
 
     /**
-     * getOrCreateNewKnownTS.
-     * 
-     * @return
+     * @return the {@link int} minOffset
      */
-    private Long getNextTS() {
-	if (this.knownTS == null) {
-	    final long now = System.currentTimeMillis();
-	    final long startTS = now + (this.offset * 1000);
-	    this.knownTS = new LinkedList<Long>(this.queue.timestamps);
-	    this.lastTS = 0l;
-	    while (this.lastTS < startTS) {
-		this.lastTS = this.knownTS.pollFirst();
-		if (this.lastTS == null) {
-		    this.lastTS = 0l;
-		    return null;
-		}
-	    }
-	    return this.lastTS;
-	}
-	Long newVal = this.knownTS.poll();
-	// SEBASTIAN maybe we should refresh the knownTS List earlier!
-	if (newVal == null) {
-	    do {
-		this.knownTS = new LinkedList<Long>(this.queue.timestamps);
-		newVal = 0l;
-		inner: while (newVal <= this.lastTS) {
-		    newVal = this.knownTS.pollFirst();
-		    if (newVal == null) {
-			// no new timestamps yet, try it again
-			try {
-			    Thread.sleep(1000);
-			} catch (final InterruptedException e) {
-			}
-			break inner;
-		    }
-		}
-	    } while (newVal == null);
-	}
-	this.lastTS = newVal;
-	// System.out.println(DateFormat.getTimeInstance()
-	// .format(new Date(lastTS)));
-	return this.lastTS;
+    public int getMinOffset() {
+	return this.minOffset;
     }
 
     /**
@@ -150,58 +163,79 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
     }
 
     /**
-     * readSegment.
+     * innerSetOffset.
      * 
-     * @return <code>S</code>
+     * @param offset
+     *            <code>int</code>
      */
-    public S readSegment() {
-	final Long ts = getNextTS();
-	if (ts == null) {
-	    return null;
+    private void innerSetOffset(final int offset) {
+	if (this.offset != offset) {
+	    this.offset = offset;
+	    this.offsetChanged = true;
 	}
-	final S sFromFile = this.queue.getSegmentForTimestamp(ts);
-	if (sFromFile != null) {
-	    if (this.offsetChanged && (this.lastSequenceNumber > -1)) {
-		this.sequenceNumberOffset = sFromFile.getSequenceNumber()
-			- this.lastSequenceNumber - 1;
-		this.offsetChanged = false;
-	    }
-	    sFromFile.setSequenceNumber(sFromFile.getSequenceNumber()
-		    - this.sequenceNumberOffset);
-	    this.lastSequenceNumber = sFromFile.getSequenceNumber();
-	}
-	return sFromFile;
     }
 
     /**
      * readSegment.
      * 
-     * @param numberOfFrames
-     *            <code>int</code>
      * @return <code>S</code>
      */
-    public S readSegment(final int framesToRead) {
-	if (this.currentSegment == null) {
-	    final S readSegment = readSegment();
-	    if (readSegment == null) {
-		return null;
-	    }
-	    this.currentSegment = readSegment;
+    public S readSegment() {
+	if (this.offsetChanged || (this.lastSequenceNumber < 0)) {
+	    final long nearestTimestamp = this.queue
+		    .findNearestTimestamp(System.currentTimeMillis()
+			    + (getOffset() * 1000));
+	    final S sFromFile = this.queue
+		    .getSegmentForTimestamp(nearestTimestamp);
+	    this.lastSequenceNumber = sFromFile.getSequenceNumber();
+	    this.offsetChanged = false;
+	    return sFromFile;
 	}
-	S returnVal = null;
-	final F[] frames = this.currentSegment.getFrames();
-	if (frames.length <= framesToRead) {
-	    returnVal = this.currentSegment;
-	    this.currentSegment = null;
-	    return returnVal;
+	return this.queue
+		.getSegmentForSequenceNumber(++this.lastSequenceNumber);
+    }
+
+    // /**
+    // * readSegment.
+    // *
+    // * @param numberOfFrames
+    // * <code>int</code>
+    // * @return <code>S</code>
+    // */
+    // private S readSegment(final int framesToRead) {
+    // if (this.currentSegment == null) {
+    // final S readSegment = readSegment();
+    // if (readSegment == null) {
+    // return null;
+    // }
+    // this.currentSegment = readSegment;
+    // }
+    // S returnVal = null;
+    // final F[] frames = this.currentSegment.getFrames();
+    // if (frames.length <= framesToRead) {
+    // returnVal = this.currentSegment;
+    // this.currentSegment = null;
+    // return returnVal;
+    // }
+    // // SEBASTIAN sequence number of segments gets broken! needs to be
+    // // checked
+    // returnVal = this.factory.createSegment(Arrays.copyOfRange(frames, 0,
+    // framesToRead));
+    // this.currentSegment = this.factory.createSegment(Arrays.copyOfRange(
+    // frames, framesToRead, frames.length));
+    // return returnVal;
+    // }
+
+    /**
+     * @param minOffset
+     *            {@link int} the minOffset to set
+     */
+    public void setMinOffset(final int minOffset) {
+	this.minOffset = minOffset;
+	if (this.offset > this.minOffset) {
+	    this.offset = this.minOffset;
+	    this.offsetChanged = true;
 	}
-	// SEBASTIAN sequence number of segments gets broken! needs to be
-	// checked
-	returnVal = this.factory.createSegment(Arrays.copyOfRange(frames, 0,
-		framesToRead));
-	this.currentSegment = this.factory.createSegment(Arrays.copyOfRange(
-		frames, framesToRead, frames.length));
-	return returnVal;
     }
 
     /**
@@ -209,21 +243,11 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      *            {@link int} the offset to set
      */
     public void setOffset(final int offset) {
-	if (offset > 0) {
-	    throw new IllegalArgumentException(
-		    "offset MUST be less than or equal to 0!");
+	if (offset > getMinOffset()) {
+	    innerSetOffset(getMinOffset());
+	} else {
+	    innerSetOffset(offset);
 	}
-	if (this.offset != offset) {
-	    this.offset = offset;
-	    if (this.knownTS != null) {
-		this.knownTS.clear();
-		this.knownTS = null;
-	    }
-	    this.offsetChanged = true;
-	    this.lastTS = 0l;
-	}
-	// SEBASTIAN what about sequence numbers of segments after changing the
-	// offset? we should keep the last one and offset accordingly!
     }
 }
 

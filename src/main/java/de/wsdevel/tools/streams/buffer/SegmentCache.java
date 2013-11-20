@@ -109,6 +109,24 @@ public abstract class SegmentCache<F extends Frame, S extends Segment<F>>
     }
 
     /**
+     * findNearestTimestamp.
+     * 
+     * @param timestampRef
+     *            <code>long</code>
+     * @return <code>long</code>
+     */
+    public long findNearestTimestamp(final long timestampRef) {
+	Long lastTimestamp = 0l;
+	for (final Long timestamp : this.timestamps) {
+	    if (timestampRef < timestamp) {
+		return timestamp;
+	    }
+	    lastTimestamp = timestamp;
+	}
+	return lastTimestamp;
+    }
+
+    /**
      * @return the {@link QueueBehaviour} behaviour
      */
     public QueueBehaviour getBehaviour() {
@@ -150,13 +168,27 @@ public abstract class SegmentCache<F extends Frame, S extends Segment<F>>
 	return this.name;
     }
 
+    /**
+     * getSegmentForSequenceNumber.
+     * 
+     * @param sequenceNumber
+     * @return
+     */
+    public abstract S getSegmentForSequenceNumber(int sequenceNumber);
+
+    /**
+     * getSegmentForTimestamp.
+     * 
+     * @param timestamp
+     * @return
+     */
     public abstract S getSegmentForTimestamp(Long timestamp);
 
     /**
      * iterator.
      * 
      * @see java.util.AbstractCollection#iterator()
-     * @return
+     * @return {@link Iterator}<code>S</code>
      */
     @Override
     public Iterator<S> iterator() {

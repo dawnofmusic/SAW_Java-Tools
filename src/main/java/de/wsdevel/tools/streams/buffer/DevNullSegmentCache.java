@@ -26,10 +26,23 @@ public class DevNullSegmentCache<F extends Frame, S extends Segment<F>> extends
 	SegmentCache<F, S> {
 
     /**
+     * getSegmentForSequenceNumber.
+     * 
+     * @see de.wsdevel.tools.streams.buffer.SegmentCache#getSegmentForSequenceNumber(int)
+     * @param sequenceNumber
+     * @return
+     */
+    @Override
+    public S getSegmentForSequenceNumber(final int sequenceNumber) {
+	return null;
+    }
+
+    /**
      * getSegmentForTimestamp.
      * 
      * @see de.wsdevel.tools.streams.buffer.SegmentCache#getSegmentForTimestamp(java.lang.Long)
-     * @param timestamp <code>long</code>F
+     * @param timestamp
+     *            <code>long</code>F
      * @return null. Always.
      */
     @Override
@@ -42,8 +55,10 @@ public class DevNullSegmentCache<F extends Frame, S extends Segment<F>> extends
      * 
      * @see de.wsdevel.tools.streams.buffer.SegmentCache#offer(de.wsdevel.tools.streams.container.Segment,
      *      long)
-     * @param e <code>S</code>
-     * @param timestamp <code>long</code>
+     * @param e
+     *            <code>S</code>
+     * @param timestamp
+     *            <code>long</code>
      * @return <code>boolean</code> <code>true</code>. Always.
      */
     @Override
