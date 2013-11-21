@@ -27,21 +27,6 @@ import de.wsdevel.tools.streams.container.Segment;
  */
 public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 
-    // /**
-    // * {@link FrameQueueBuffer.SegmentFactory<F,S>} factory
-    // */
-    // private final FrameQueueBuffer.SegmentFactory<F, S> factory;
-
-    // /**
-    // * {@link LinkedList<Long>} knownTS
-    // */
-    // private LinkedList<Long> knownTS = null;
-
-    // /**
-    // * {@link Long} lastTS
-    // */
-    // private Long lastTS = 0l;
-
     /**
      * {@link Log} LOG
      */
