@@ -53,11 +53,6 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      */
     public static final int NANOS_IN_MILLIS = 1000 * 1000;
 
-    // /**
-    // * {@link S} currentSegment
-    // */
-    // private S currentSegment;
-
     /**
      * {@link int} lastSequenceNumber
      */
@@ -73,65 +68,10 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
      */
     private int offset = 0;
 
-    // /**
-    // * {@link int} lastSequenceNumber
-    // */
-    // private int lastSequenceNumber = -1;
-    //
-    // /**
-    // * {@link int} sequenceNumberOffset
-    // */
-    // private int sequenceNumberOffset = 0;
-    //
     /**
      * {@link boolean} offsetChanged
      */
     private boolean offsetChanged = true;
-
-    // /**
-    // * getOrCreateNewKnownTS.
-    // *
-    // * @return {@link Long}
-    // */
-    // private Long getNextTS() {
-    // if (this.knownTS == null) {
-    // final long now = System.currentTimeMillis();
-    // final long startTS = now + (this.offset * 1000);
-    // this.knownTS = new LinkedList<Long>(this.queue.timestamps);
-    // this.lastTS = 0l;
-    // while (this.lastTS < startTS) {
-    // this.lastTS = this.knownTS.pollFirst();
-    // if (this.lastTS == null) {
-    // this.lastTS = 0l;
-    // return null;
-    // }
-    // }
-    // return this.lastTS;
-    // }
-    // Long newVal = this.knownTS.poll();
-    // // SEBASTIAN maybe we should refresh the knownTS List earlier!
-    // if (newVal == null) {
-    // do {
-    // this.knownTS = new LinkedList<Long>(this.queue.timestamps);
-    // newVal = 0l;
-    // inner: while (newVal <= this.lastTS) {
-    // newVal = this.knownTS.pollFirst();
-    // if (newVal == null) {
-    // // no new timestamps yet, try it again
-    // try {
-    // Thread.sleep(1000);
-    // } catch (final InterruptedException e) {
-    // }
-    // break inner;
-    // }
-    // }
-    // } while (newVal == null);
-    // }
-    // this.lastTS = newVal;
-    // // System.out.println(DateFormat.getTimeInstance()
-    // // .format(new Date(lastTS)));
-    // return this.lastTS;
-    // }
 
     /**
      * {@link SegmentCache}<F,S> queue
@@ -187,44 +127,25 @@ public class TimeshiftBuffer<F extends Frame, S extends Segment<F>> {
 			    + (getOffset() * 1000));
 	    final S sFromFile = this.queue
 		    .getSegmentForTimestamp(nearestTimestamp);
-	    this.lastSequenceNumber = sFromFile.getSequenceNumber();
-	    this.offsetChanged = false;
+	    if (sFromFile != null) {
+		this.lastSequenceNumber = sFromFile.getSequenceNumber();
+		this.offsetChanged = false;
+		// System.out.println("init: lastSequenceNumber "
+		// + this.lastSequenceNumber + ", segment: " + sFromFile);
+	    }
 	    return sFromFile;
 	}
-	return this.queue
-		.getSegmentForSequenceNumber(++this.lastSequenceNumber);
+	final int sequenceNumber = ++this.lastSequenceNumber;
+	final S segmentForSequenceNumber = this.queue
+		.getSegmentForSequenceNumber(sequenceNumber);
+	// System.out.println("normal: sequenceNumber " +
+	// this.lastSequenceNumber
+	// + ", segment: " + segmentForSequenceNumber);
+	if (segmentForSequenceNumber == null) {
+	    this.lastSequenceNumber--;
+	}
+	return segmentForSequenceNumber;
     }
-
-    // /**
-    // * readSegment.
-    // *
-    // * @param numberOfFrames
-    // * <code>int</code>
-    // * @return <code>S</code>
-    // */
-    // private S readSegment(final int framesToRead) {
-    // if (this.currentSegment == null) {
-    // final S readSegment = readSegment();
-    // if (readSegment == null) {
-    // return null;
-    // }
-    // this.currentSegment = readSegment;
-    // }
-    // S returnVal = null;
-    // final F[] frames = this.currentSegment.getFrames();
-    // if (frames.length <= framesToRead) {
-    // returnVal = this.currentSegment;
-    // this.currentSegment = null;
-    // return returnVal;
-    // }
-    // // SEBASTIAN sequence number of segments gets broken! needs to be
-    // // checked
-    // returnVal = this.factory.createSegment(Arrays.copyOfRange(frames, 0,
-    // framesToRead));
-    // this.currentSegment = this.factory.createSegment(Arrays.copyOfRange(
-    // frames, framesToRead, frames.length));
-    // return returnVal;
-    // }
 
     /**
      * @param minOffset
