@@ -65,11 +65,6 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     }
 
     /**
-     * {@link int} bufferSize
-     */
-    private int bufferSize = 0;
-
-    /**
      * {@link ContainerInputStream<T>} cis
      */
     private ContainerInputStream<F, S> cis;
@@ -95,9 +90,6 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     /** {@link Object} readingLock */
     private final Object readingLock = new Lock();
 
-    // /** {@link SegmentFactory<T>} The segmentFactory. */
-    // private final SegmentFactory<F, S> segmentFactory;
-
     /** {@link long} The lastTimestamp. */
     private long waitUntil = -1;
 
@@ -114,7 +106,6 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    final SegmentFactory<F, S> segmentFactoryRef,
 	    final boolean closeableCIS) {
 	super(maxBufferSizeVal);
-	// this.segmentFactory = segmentFactoryRef;
 	setBevavior(BufferBehavior.fastAccessRingBuffer);
 	// (20131105 saw) selection of best performing queues. For us
 	// ArrayBlockingQueue should be the best selection.
@@ -134,28 +125,11 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    public void flush() throws IOException {
 	    }
 
-	    // @Override
-	    // public void writeFrame(final F frame) throws IOException {
-	    // checkClosed();
-	    // FrameQueueBuffer.this.write(frame);
-	    // // System.out.println("wrote frame. size: " + queue.size());
-	    // }
-
 	    @Override
-	    public void writeSegment(S segment) throws IOException {
+	    public void writeSegment(final S segment) throws IOException {
 		checkClosed();
 		FrameQueueBuffer.this.write(segment);
 	    }
-
-	    // @Override
-	    // public void writeFrames(final F[] frames, final int off,
-	    // final int len) throws IOException {
-	    // checkClosed();
-	    // for (int i = off; (i < frames.length) && (i < (off + len)); i++)
-	    // {
-	    // writeFrame(frames[i]);
-	    // }
-	    // }
 	};
 	this.cis = new ContainerInputStream<F, S>(null) {
 	    @Override
@@ -165,43 +139,10 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		}
 	    }
 
-	    // @Override
-	    // public F readFrame() throws IOException {
-	    // checkClosed();
-	    // // System.out.println("read frame size: " + queue.size());
-	    // return (F) FrameQueueBuffer.this.read();
-	    // }
-	    //
-	    // @Override
-	    // public int readFrames(final F[] frames, final int off, final int
-	    // len)
-	    // throws IOException {
-	    // checkClosed();
-	    // int count = 0;
-	    // for (int i = off; (i < frames.length) && (i < (off + len)); i++)
-	    // {
-	    // frames[i] = readFrame();
-	    // count++;
-	    // }
-	    // // never return -1! Since this buffer could get empty but filled
-	    // // afterwards, we would stop any communication (20130428 saw)
-	    // // if (count == 0) {
-	    // // return -1;
-	    // // }
-	    // return count;
-	    // }
-
 	    @Override
 	    public S readSegment() throws IOException {
 		checkClosed();
 		return FrameQueueBuffer.this.read();
-		// final F[] frames = FrameQueueBuffer.this.segmentFactory
-		// .createFrameArray(numberOfFrames);
-		// readFrames(frames, 0, numberOfFrames);
-		// // SEBASTIAN potential bug. Could be less frames than
-		// requested.
-		// return FrameQueueBuffer.this.segmentFactory
-		// .createSegment(frames);
 	    }
 	};
     }
@@ -238,9 +179,8 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      */
     public void clear() {
 	this.queue.clear();
-	this.bufferSize = 0;
 	this.waitUntil = -1;
-	updateFillingLevelHistory();
+	resetFillingLevel();
     }
 
     /**
@@ -270,24 +210,16 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     }
 
     /**
-     * @see de.wsdevel.tools.streams.buffer.Buffer#getCurrentBytes()
-     * @return {@code long}
-     */
-    @Override
-    public long getCurrentBytes() {
-	return this.bufferSize;
-    }
-
-    /**
      * internalFastWrite.
      * 
      * @param frame
      */
     private void internalFastWrite(final S frame) {
 	if (this.queue.offer(frame)) {
-	    this.bufferSize += frame.getSize();
-	    updateFillingLevelHistory();
-	    this.readingLock.notifyAll();
+	    updateFillingLevelHistory(frame.getSize());
+	    synchronized (this.readingLock) {
+		this.readingLock.notifyAll();
+	    }
 	} else {
 	    // read frames to dev null (20131108 saw)
 	    read();
@@ -300,16 +232,15 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * @param frame
      */
     private void internalShapingWrite(final S frame) {
-	synchronized (this.readingLock) {
-	    if (this.queue.offer(frame)) {
-		this.bufferSize += frame.getSize();
-		updateFillingLevelHistory();
+	if (this.queue.offer(frame)) {
+	    updateFillingLevelHistory(frame.getSize());
+	    synchronized (this.readingLock) {
 		this.readingLock.notifyAll();
-	    } else {
-		// (20131108 saw) queue is full
-		unblockReadAccess();
-		// SEBASTIAN frame is lost, improvements?
 	    }
+	} else {
+	    // (20131108 saw) queue is full
+	    unblockReadAccess();
+	    // SEBASTIAN frame is lost, improvements?
 	}
     }
 
@@ -324,7 +255,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    synchronized (this.readingLock) {
 		while (this.readBlocked) {
 		    try {
-			this.readingLock.wait(1000);
+			this.readingLock.wait(200);
 		    } catch (final InterruptedException e) {
 		    }
 		}
@@ -340,6 +271,25 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 			    - System.nanoTime();
 		    this.waitUntil += poll.getDurationNanos();
 		    if (nanosToSleep > 0) {
+
+			// (20131122 saw) Thread.sleep is better than wait()!
+
+			// long now = System.nanoTime();
+			// synchronized (this.readingLock) {
+			// try {
+			// this.readingLock
+			// .wait(ShapingHelper
+			// .getMillisPartFromNanos(nanosToSleep),
+			// ShapingHelper
+			// .getNanosRestFromNanos(nanosToSleep));
+			// } catch (final InterruptedException e) {
+			// }
+			// }
+			// System.out.println("slept " + (System.nanoTime() -
+			// now)
+			// + " nanos.");
+			//
+
 			try {
 			    Thread.sleep(
 				    ShapingHelper
@@ -350,8 +300,10 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 			}
 		    }
 		}
-		this.bufferSize -= poll.getSize();
-		updateFillingLevelHistory();
+		synchronized (this.writingLock) {
+		    this.writingLock.notifyAll();
+		}
+		updateFillingLevelHistory(-poll.getSize());
 		return poll;
 	    } catch (final InterruptedException e) {
 	    }
@@ -360,8 +312,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    try {
 		final S poll = this.queue.take();
 		if (poll != null) {
-		    this.bufferSize -= poll.getSize();
-		    updateFillingLevelHistory();
+		    updateFillingLevelHistory(-poll.getSize());
 		}
 		return poll;
 	    } catch (final InterruptedException e) {
@@ -390,7 +341,6 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	synchronized (this.writingLock) {
 	    this.writeBlocked = false;
 	    this.writingLock.notifyAll();
-
 	}
     }
 
@@ -408,9 +358,9 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	case trafficShapingBlockingBuffer:
 	    synchronized (this.writingLock) {
 		while (this.writeBlocked
-			|| (this.bufferSize > getMaximumBufferSize())) {
+			|| (getCurrentBytes() > getMaximumBufferSize())) {
 		    try {
-			this.writingLock.wait(1000);
+			this.writingLock.wait(200);
 		    } catch (final InterruptedException e) {
 		    }
 		}
@@ -421,7 +371,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	default:
 	    synchronized (this.readingLock) {
 		internalFastWrite(frame);
-		while (this.bufferSize > getMaximumBufferSize()) {
+		while (getCurrentBytes() > getMaximumBufferSize()) {
 		    // read frames to dev null (20130424 saw)
 		    read();
 		}

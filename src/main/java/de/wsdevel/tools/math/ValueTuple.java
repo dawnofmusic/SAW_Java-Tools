@@ -11,14 +11,14 @@ package de.wsdevel.tools.math;
 public class ValueTuple {
 
     /**
-     * <code>double</code> a.
+     * {@link Double} a
      */
-    private double a = 0;
+    private Double a = null;
 
     /**
-     * <code>double</code> b.
+     * {@link Double} b
      */
-    private double b = 0;
+    private Double b = null;
 
     /**
      * Default constructor.
@@ -28,44 +28,46 @@ public class ValueTuple {
     }
 
     /**
+     * ValueTuple constructor.
+     * 
      * @param aVal
-     *            <code>double</code>
+     *            {@link Double}
      * @param bVal
-     *            <code>double</code>
+     *            {@link Double}
      */
-    public ValueTuple(final double aVal, final double bVal) {
+    public ValueTuple(final Double aVal, final Double bVal) {
 	setA(aVal);
 	setB(bVal);
     }
 
     /**
-     * @return {@link double} the a.
+     * @return the {@link Double} a
      */
-    public final double getA() {
+    public Double getA() {
 	return this.a;
     }
 
     /**
-     * @return {@link double} the b.
+     * @return the {@link Double} b
      */
-    public final double getB() {
+    public Double getB() {
 	return this.b;
     }
 
     /**
-     * @param aVal
-     *            {@link double} the a to set.
+     * @param a
+     *            {@link Double} the a to set
      */
-    public final void setA(double aVal) {
-	this.a = aVal;
+    public void setA(final Double a) {
+	this.a = a;
     }
 
     /**
-     * @param bVal
-     *            {@link double} the b to set.
+     * @param b
+     *            {@link Double} the b to set
      */
-    public final void setB(double bVal) {
-	this.b = bVal;
+    public void setB(final Double b) {
+	this.b = b;
     }
 
     /**

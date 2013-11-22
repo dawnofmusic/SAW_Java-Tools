@@ -203,6 +203,10 @@ public class FileSystemSegmentCache<F extends Frame, S extends Segment<F>>
     public boolean offer(final S e, final long timestamp) {
 	final File file = createChunkFileForChunkURI(
 		createFilenameForChunk(e, timestamp), this.cacheDir);
+	// if (e.getDurationNanos() < 0) {
+	// System.out.println("chunk with negative duration: "
+	// + file.getAbsolutePath());
+	// }
 	if (getLastOfferedTimestamp() > -1) {
 	    final long deltat = timestamp - getLastOfferedTimestamp();
 	    if (deltat > 0) {

@@ -51,9 +51,19 @@ public abstract class Buffer {
     private BufferBehavior bevavior;
 
     /**
+     * {@link long} bufferFillingLevel
+     */
+    private long bufferFillingLevel = 0;
+
+    /**
      * {@link Graph} fillingLevelHistory
      */
-    private final Graph fillingLevelHistory;
+    private Graph fillingLevelHistory;
+
+    /**
+     * {@link Object} fillingLevelLock
+     */
+    private final Object fillingLevelLock = new Object();
 
     /**
      * bufferSize.
@@ -88,8 +98,7 @@ public abstract class Buffer {
     public Buffer(final long maximumBufferSizeVal) {
 	this.pcs = new PropertyChangeSupport(this);
 	setMaximumBufferSize(maximumBufferSizeVal);
-	this.fillingLevelHistory = new Graph();
-	this.fillingLevelHistory.setMaxNumberOfValues(300);
+	initFillingLevelHistory();
 	this.startMillis = System.currentTimeMillis();
 	Buffer.stateCheckTimer.scheduleAtFixedRate(new Runnable() {
 	    @Override
@@ -97,6 +106,12 @@ public abstract class Buffer {
 		checkStatus();
 	    }
 	}, 0, 200, TimeUnit.MILLISECONDS);
+	Buffer.stateCheckTimer.scheduleAtFixedRate(new Runnable() {
+	    @Override
+	    public void run() {
+		checkFillingLevel();
+	    }
+	}, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -168,6 +183,17 @@ public abstract class Buffer {
     }
 
     /**
+     * checkFillingLevel.
+     */
+    private void checkFillingLevel() {
+	final ValueTuple tuple = new ValueTuple(
+		(System.currentTimeMillis() - this.startMillis) / 1000d,
+		(100 * this.bufferFillingLevel)
+			/ (double) getMaximumBufferSize());
+	this.fillingLevelHistory.addTuple(tuple);
+    }
+
+    /**
      * Returns the _50PercentTreshold.
      * 
      * @return {@link int}
@@ -190,7 +216,9 @@ public abstract class Buffer {
      * 
      * @return {@code long} the current number of bytes used by this buffer;
      */
-    public abstract long getCurrentBytes();
+    public long getCurrentBytes() {
+	return this.bufferFillingLevel;
+    }
 
     /**
      * @return the {@link Graph} fillingLevelHistory
@@ -236,6 +264,14 @@ public abstract class Buffer {
     }
 
     /**
+     * initFillingLevelHistory.
+     */
+    private void initFillingLevelHistory() {
+	this.fillingLevelHistory = new Graph();
+	this.fillingLevelHistory.setMaxNumberOfValues(300);
+    }
+
+    /**
      * removePropertyChangeListener
      * 
      * @param listener
@@ -257,6 +293,19 @@ public abstract class Buffer {
     public void removePropertyChangeListener(final String propertyName,
 	    final PropertyChangeListener listener) {
 	this.pcs.removePropertyChangeListener(propertyName, listener);
+    }
+
+    /**
+     * resetFillingLevel.
+     */
+    protected void resetFillingLevel() {
+	synchronized (this.fillingLevelLock) {
+	    this.bufferFillingLevel = 0;
+	    initFillingLevelHistory();
+	    // final ValueTuple tuple = new ValueTuple(
+	    // (System.currentTimeMillis() - this.startMillis) / 1000d, 0);
+	    // this.fillingLevelHistory.addTuple(tuple);
+	}
     }
 
     /**
@@ -297,9 +346,11 @@ public abstract class Buffer {
      */
     public void setState(final BufferState stateRef) {
 	final BufferState oldValue = this.state;
-	this.state = stateRef;
-	this.pcs.firePropertyChange(Buffer.PROPERTY_NAME_STATE, oldValue,
-		this.state);
+	if (stateRef != oldValue) {
+	    this.state = stateRef;
+	    this.pcs.firePropertyChange(Buffer.PROPERTY_NAME_STATE, oldValue,
+		    this.state);
+	}
     }
 
     /**
@@ -315,11 +366,10 @@ public abstract class Buffer {
     /**
      * updateFilingLevelHistory.
      */
-    protected void updateFillingLevelHistory() {
-	final ValueTuple tuple = new ValueTuple(
-		(System.currentTimeMillis() - this.startMillis) / 1000d,
-		(100 * getCurrentBytes()) / (double) getMaximumBufferSize());
-	this.fillingLevelHistory.addTuple(tuple);
+    protected void updateFillingLevelHistory(final long deltaFillingLevel) {
+	synchronized (this.fillingLevelLock) {
+	    this.bufferFillingLevel += deltaFillingLevel;
+	}
     }
 
 }
