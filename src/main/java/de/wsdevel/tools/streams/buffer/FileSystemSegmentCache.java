@@ -229,19 +229,21 @@ public class FileSystemSegmentCache<F extends Frame, S extends Segment<F>>
 			.currentTimeMillis()) {
 		    final File remove = this.timestampRegistry
 			    .remove(this.timestamps.poll());
-		    try {
-			final int sequenceNumberFromFilename = getSequenceNumberFromFilename(remove
-				.getName());
-			this.sequenceNumberRegistry
-				.remove(sequenceNumberFromFilename);
-		    } catch (ParseException e1) {
-			LOG.error(e1.getLocalizedMessage(), e1);
-		    }
-		    if (remove != null && !remove.delete()) {
-			// 20130610 BUGFIX checking whether remove is null or
-			// not.
-			FileSystemSegmentCache.LOG
-				.error("Could not delete [" + remove.getAbsolutePath() + "]"); //$NON-NLS-1$//$NON-NLS-2$
+		    if (remove != null) {
+			// 20130610 BUGFIX checking whether remove is null
+			// or not.
+			try {
+			    final int sequenceNumberFromFilename = getSequenceNumberFromFilename(remove
+				    .getName());
+			    this.sequenceNumberRegistry
+				    .remove(sequenceNumberFromFilename);
+			} catch (ParseException e1) {
+			    LOG.error(e1.getLocalizedMessage(), e1);
+			}
+			if (!remove.delete()) {
+			    FileSystemSegmentCache.LOG
+				    .error("Could not delete [" + remove.getAbsolutePath() + "]"); //$NON-NLS-1$//$NON-NLS-2$
+			}
 		    }
 		}
 	    case growingQueue:

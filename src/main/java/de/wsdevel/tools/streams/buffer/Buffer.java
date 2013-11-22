@@ -156,28 +156,33 @@ public abstract class Buffer {
 	    if (getCurrentBytes() > this.preFillTreshold) {
 		unblockReadAccess();
 		setState(BufferState.reading);
-		Buffer.LOG.info("Unblocked Access. Delta was [" //$NON-NLS-1$
-			+ getCurrentBytes() + "]."); //$NON-NLS-1$
+		if (LOG.isInfoEnabled()) {
+		    Buffer.LOG.info("Unblocked Access. Delta was [" //$NON-NLS-1$
+			    + getCurrentBytes() + "]."); //$NON-NLS-1$
+		}
 	    }
 	    break;
 	case reading:
 	default:
-	    if (getCurrentBytes() > this.preFillTreshold) {
-		// if (getBevavior() != BufferBehavior.fast) {
-		// blockWriteAccess();
-		// }
-	    } else if (getCurrentBytes() < this.readingTreshold) {
+	    // if (getCurrentBytes() > this.preFillTreshold) {
+	    // // if (getBevavior() != BufferBehavior.fast) {
+	    // // blockWriteAccess();
+	    // // }
+	    // } else
+	    if (getCurrentBytes() < this.readingTreshold) {
 		if (getBevavior() != BufferBehavior.fastAccessRingBuffer) {
 		    blockReadAccess();
 		}
 		setState(BufferState.filling);
-		Buffer.LOG.info("Blocked Access. Delta was [" //$NON-NLS-1$
-			+ getCurrentBytes() + "]."); //$NON-NLS-1$
+		if (LOG.isInfoEnabled()) {
+		    Buffer.LOG.info("Blocked Access. Delta was [" //$NON-NLS-1$
+			    + getCurrentBytes() + "]."); //$NON-NLS-1$
+		}
 	    }
-	    if (getCurrentBytes() < this._50PercentTreshold) {
-		// unblock write access if necessary;
-		unblockWriteAccess();
-	    }
+	    // if (getCurrentBytes() < this._50PercentTreshold) {
+	    // unblock write access if necessary;
+	    // unblockWriteAccess();
+	    // }
 	    break;
 	}
     }
@@ -369,6 +374,7 @@ public abstract class Buffer {
     protected void updateFillingLevelHistory(final long deltaFillingLevel) {
 	synchronized (this.fillingLevelLock) {
 	    this.bufferFillingLevel += deltaFillingLevel;
+	    // checkFillingLevel();
 	}
     }
 
