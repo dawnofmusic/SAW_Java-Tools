@@ -14,9 +14,6 @@ package de.wsdevel.tools.streams.buffer;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,12 +34,6 @@ public abstract class Buffer {
 
     /** {@link String} The PROPERTY_NAME_STATE. */
     public static final String PROPERTY_NAME_STATE = "state"; //$NON-NLS-1$
-
-    /**
-     * {@link ScheduledExecutorService} stateCheckTimer
-     */
-    private static ScheduledExecutorService stateCheckTimer = Executors
-	    .newScheduledThreadPool(4);
 
     /** {@link int} The _50PercentTreshold. */
     private int _50PercentTreshold;
@@ -100,24 +91,13 @@ public abstract class Buffer {
 	setMaximumBufferSize(maximumBufferSizeVal);
 	initFillingLevelHistory();
 	this.startMillis = System.currentTimeMillis();
-	Buffer.stateCheckTimer.scheduleAtFixedRate(new Runnable() {
-	    @Override
-	    public void run() {
-		checkStatus();
-	    }
-	}, 0, 200, TimeUnit.MILLISECONDS);
-	Buffer.stateCheckTimer.scheduleAtFixedRate(new Runnable() {
-	    @Override
-	    public void run() {
-		checkFillingLevel();
-	    }
-	}, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
     /**
      * addPropertyChangeListener
      * 
      * @param listener
+     *            {@link PropertyChangeListener}
      * @see java.beans.PropertyChangeSupport#addPropertyChangeListener(java.beans.PropertyChangeListener)
      */
     public void addPropertyChangeListener(final PropertyChangeListener listener) {
@@ -128,7 +108,9 @@ public abstract class Buffer {
      * addPropertyChangeListener
      * 
      * @param propertyName
+     *            {@link String}
      * @param listener
+     *            {@link PropertyChangeListener}
      * @see java.beans.PropertyChangeSupport#addPropertyChangeListener(java.lang.String,
      *      java.beans.PropertyChangeListener)
      */
@@ -148,6 +130,17 @@ public abstract class Buffer {
     public abstract void blockWriteAccess();
 
     /**
+     * checkFillingLevel.
+     */
+    private void checkFillingLevel() {
+	final ValueTuple tuple = new ValueTuple(
+		(System.currentTimeMillis() - this.startMillis) / 1000d,
+		(100 * this.bufferFillingLevel)
+			/ (double) getMaximumBufferSize());
+	this.fillingLevelHistory.addTuple(tuple);
+    }
+
+    /**
      * checkStatus.
      */
     protected void checkStatus() {
@@ -156,7 +149,7 @@ public abstract class Buffer {
 	    if (getCurrentBytes() > this.preFillTreshold) {
 		unblockReadAccess();
 		setState(BufferState.reading);
-		if (LOG.isInfoEnabled()) {
+		if (Buffer.LOG.isInfoEnabled()) {
 		    Buffer.LOG.info("Unblocked Access. Delta was [" //$NON-NLS-1$
 			    + getCurrentBytes() + "]."); //$NON-NLS-1$
 		}
@@ -174,7 +167,7 @@ public abstract class Buffer {
 		    blockReadAccess();
 		}
 		setState(BufferState.filling);
-		if (LOG.isInfoEnabled()) {
+		if (Buffer.LOG.isInfoEnabled()) {
 		    Buffer.LOG.info("Blocked Access. Delta was [" //$NON-NLS-1$
 			    + getCurrentBytes() + "]."); //$NON-NLS-1$
 		}
@@ -185,17 +178,6 @@ public abstract class Buffer {
 	    // }
 	    break;
 	}
-    }
-
-    /**
-     * checkFillingLevel.
-     */
-    private void checkFillingLevel() {
-	final ValueTuple tuple = new ValueTuple(
-		(System.currentTimeMillis() - this.startMillis) / 1000d,
-		(100 * this.bufferFillingLevel)
-			/ (double) getMaximumBufferSize());
-	this.fillingLevelHistory.addTuple(tuple);
     }
 
     /**
@@ -280,6 +262,7 @@ public abstract class Buffer {
      * removePropertyChangeListener
      * 
      * @param listener
+     *            {@link PropertyChangeListener}
      * @see java.beans.PropertyChangeSupport#removePropertyChangeListener(java.beans.PropertyChangeListener)
      */
     public void removePropertyChangeListener(
@@ -291,7 +274,9 @@ public abstract class Buffer {
      * removePropertyChangeListener
      * 
      * @param propertyName
+     *            {@link String}
      * @param listener
+     *            {@link PropertyChangeListener}
      * @see java.beans.PropertyChangeSupport#removePropertyChangeListener(java.lang.String,
      *      java.beans.PropertyChangeListener)
      */
@@ -369,12 +354,18 @@ public abstract class Buffer {
     public abstract void unblockWriteAccess();
 
     /**
-     * updateFilingLevelHistory.
+     * updateFillingLevelHistory.
+     * 
+     * @param deltaFillingLevel
+     *            <code>long</code>
      */
     protected void updateFillingLevelHistory(final long deltaFillingLevel) {
 	synchronized (this.fillingLevelLock) {
-	    this.bufferFillingLevel += deltaFillingLevel;
-	    // checkFillingLevel();
+	    if (deltaFillingLevel != 0) {
+		this.bufferFillingLevel += deltaFillingLevel;
+	    }
+	    checkFillingLevel();
+	    checkStatus();
 	}
     }
 

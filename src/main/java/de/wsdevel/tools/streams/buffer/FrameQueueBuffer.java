@@ -16,6 +16,8 @@
 
 package de.wsdevel.tools.streams.buffer;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -145,6 +147,15 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		return FrameQueueBuffer.this.read();
 	    }
 	};
+	addPropertyChangeListener(Buffer.PROPERTY_NAME_STATE,
+		new PropertyChangeListener() {
+		    @Override
+		    public void propertyChange(final PropertyChangeEvent evt) {
+			if (evt.getNewValue() == BufferState.filling) {
+			    FrameQueueBuffer.this.waitUntil = -1;
+			}
+		    }
+		});
     }
 
     /**
@@ -215,6 +226,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * @param frame
      */
     private void internalFastWrite(final S frame) {
+	updateFillingLevelHistory(0);
 	if (this.queue.offer(frame)) {
 	    updateFillingLevelHistory(frame.getSize());
 	    synchronized (this.readingLock) {
@@ -232,6 +244,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * @param frame
      */
     private void internalShapingWrite(final S frame) {
+	updateFillingLevelHistory(0);
 	if (this.queue.offer(frame)) {
 	    updateFillingLevelHistory(frame.getSize());
 	    synchronized (this.readingLock) {
@@ -261,6 +274,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		}
 	    }
 	    try {
+		updateFillingLevelHistory(0);
 		final S poll = this.queue.take();
 		if (this.waitUntil < 0) {
 		    // first visit, initialize
@@ -310,6 +324,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	case fastAccessRingBuffer:
 	default:
 	    try {
+		updateFillingLevelHistory(0);
 		final S poll = this.queue.take();
 		if (poll != null) {
 		    updateFillingLevelHistory(-poll.getSize());
