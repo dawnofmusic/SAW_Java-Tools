@@ -30,7 +30,7 @@ public abstract class Buffer {
     private static final Log LOG = LogFactory.getLog(Buffer.class);
 
     /** {@link String} The PROPERTY_NAME_MAXIMUM_BUFFER_SIZE. */
-    private static final String PROPERTY_NAME_MAXIMUM_BUFFER_SIZE = "maximumBufferSize";
+    public static final String PROPERTY_NAME_MAXIMUM_BUFFER_SIZE = "maximumBufferSize";
 
     /** {@link String} The PROPERTY_NAME_STATE. */
     public static final String PROPERTY_NAME_STATE = "state"; //$NON-NLS-1$
@@ -135,8 +135,9 @@ public abstract class Buffer {
     private void checkFillingLevel() {
 	final ValueTuple tuple = new ValueTuple(
 		(System.currentTimeMillis() - this.startMillis) / 1000d,
-		(100 * this.bufferFillingLevel)
-			/ (double) getMaximumBufferSize());
+		// (100 * this.bufferFillingLevel)
+		// / (double) getMaximumBufferSize());
+		(double) this.bufferFillingLevel);
 	this.fillingLevelHistory.addTuple(tuple);
     }
 
@@ -319,6 +320,9 @@ public abstract class Buffer {
      *            {@link long}
      */
     public void setMaximumBufferSize(final long maximumBufferSize) {
+	if(maximumBufferSize < 1){
+	    throw new IllegalArgumentException("maximumBufferSize MUST be bigger than 0!");
+	}
 	final long oldValue = this.maximumBufferSize;
 	this.maximumBufferSize = maximumBufferSize;
 	this.preFillTreshold = Math.round(this.maximumBufferSize * 0.7f);

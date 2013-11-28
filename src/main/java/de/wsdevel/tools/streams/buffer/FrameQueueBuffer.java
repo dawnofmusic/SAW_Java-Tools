@@ -323,18 +323,17 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    }
 	case fastAccessRingBuffer:
 	default:
-	    try {
-		updateFillingLevelHistory(0);
-		final S poll = this.queue.take();
-		if (poll != null) {
-		    updateFillingLevelHistory(-poll.getSize());
-		}
-		return poll;
-	    } catch (final InterruptedException e) {
+	    updateFillingLevelHistory(0);
+	    // System.out.println("during read before take!");
+	    final S poll = this.queue.poll();
+	    // System.out.println("during read after take!");
+	    if (poll != null) {
+		updateFillingLevelHistory(-poll.getSize());
 	    }
+	    return poll;
 	}
-	// will happen only in case of being interrupted
-	return null;
+	// // will happen only in case of being interrupted
+	// return null;
     }
 
     /**
@@ -389,6 +388,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		while (getCurrentBytes() > getMaximumBufferSize()) {
 		    // read frames to dev null (20130424 saw)
 		    read();
+		    // System.out.println("during write reading to dev null!");
 		}
 	    }
 	    break;
