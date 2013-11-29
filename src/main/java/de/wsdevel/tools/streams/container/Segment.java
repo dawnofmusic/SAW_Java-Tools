@@ -354,7 +354,6 @@ public abstract class Segment<T extends Frame> extends AbstractFrame implements
     }
 
 }
-
 // ==============[VERSION-CONTROL-LOG-START]==============
 // -------------------------------------------------------
 // $Log: Segment.java,v $
