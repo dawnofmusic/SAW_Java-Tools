@@ -388,7 +388,10 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		while (getCurrentBytes() > getMaximumBufferSize()) {
 		    // read frames to dev null (20130424 saw)
 		    read();
-		    // System.out.println("during write reading to dev null!");
+		    // final S read = read();
+		    // System.out
+		    // .println("during write reading to dev null Segment ["
+		    // + read.getSequenceNumber() + "]!");
 		}
 	    }
 	    break;
