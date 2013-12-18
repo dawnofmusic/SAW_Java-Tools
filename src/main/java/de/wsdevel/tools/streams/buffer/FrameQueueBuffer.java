@@ -273,9 +273,13 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		    }
 		}
 	    }
-	    try {
-		updateFillingLevelHistory(0);
-		final S poll = this.queue.take();
+	    // try {
+	    updateFillingLevelHistory(0);
+	    final S poll = this.queue.poll();
+	    if (poll == null) {
+		this.waitUntil = -1;
+		return null;
+	    } else {
 		if (this.waitUntil < 0) {
 		    // first visit, initialize
 		    this.waitUntil = System.nanoTime()
@@ -286,7 +290,8 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		    this.waitUntil += poll.getDurationNanos();
 		    if (nanosToSleep > 0) {
 
-			// (20131122 saw) Thread.sleep is better than wait()!
+			// (20131122 saw) Thread.sleep is better than
+			// wait()!
 
 			// long now = System.nanoTime();
 			// synchronized (this.readingLock) {
@@ -299,10 +304,6 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 			// } catch (final InterruptedException e) {
 			// }
 			// }
-			// System.out.println("slept " + (System.nanoTime() -
-			// now)
-			// + " nanos.");
-			//
 
 			try {
 			    Thread.sleep(
@@ -319,21 +320,29 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		}
 		updateFillingLevelHistory(-poll.getSize());
 		return poll;
-	    } catch (final InterruptedException e) {
 	    }
+	    // } catch (final InterruptedException e) {
+	    // }
 	case fastAccessRingBuffer:
 	default:
 	    updateFillingLevelHistory(0);
 	    // System.out.println("during read before take!");
-	    final S poll = this.queue.poll();
+	    final S poll2 = this.queue.poll();
 	    // System.out.println("during read after take!");
-	    if (poll != null) {
-		updateFillingLevelHistory(-poll.getSize());
+	    if (poll2 != null) {
+		updateFillingLevelHistory(-poll2.getSize());
 	    }
-	    return poll;
+	    return poll2;
 	}
 	// // will happen only in case of being interrupted
 	// return null;
+    }
+
+    /**
+     * resetShaping.
+     */
+    public void resetShaping() {
+	this.waitUntil = -1;
     }
 
     /**
