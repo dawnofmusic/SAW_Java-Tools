@@ -49,7 +49,7 @@ public abstract class Buffer {
     /**
      * {@link Graph} fillingLevelHistory
      */
-    private Graph fillingLevelHistory;
+    private Graph fillingLevelHistory = null;
 
     /**
      * {@link Object} fillingLevelLock
@@ -72,13 +72,37 @@ public abstract class Buffer {
     /** {@link int} The preFill. */
     private int readingTreshold;
 
-    /**
-     * {@link long} startMillis
-     */
-    private final long startMillis;
+    // /**
+    // * {@link long} startMillis
+    // */
+    // private final long startMillis;
 
     /** {@link BufferState} The state. */
     private BufferState state = BufferState.filling;
+
+    /**
+     * @return the {@link boolean} keepFillingLevelHistory
+     */
+    public boolean isKeepFillingLevelHistory() {
+	return this.fillingLevelHistory != null;
+    }
+
+    /**
+     * @param keepFillingLevelHistoryVal
+     *            {@link boolean} the keepFillingLevelHistory to set
+     */
+    public void setKeepFillingLevelHistory(boolean keepFillingLevelHistoryVal) {
+	final boolean oldValue = isKeepFillingLevelHistory();
+	if (oldValue != keepFillingLevelHistoryVal) {
+	    if (keepFillingLevelHistoryVal) {
+		initFillingLevelHistory();
+	    } else {
+		this.fillingLevelHistory = null;
+	    }
+	    this.pcs.firePropertyChange("keepFillingLevelHistory", oldValue,
+		    keepFillingLevelHistoryVal);
+	}
+    }
 
     /**
      * Buffer constructor.
@@ -86,11 +110,22 @@ public abstract class Buffer {
      * @param maximumBufferSizeVal
      *            {@code long}
      */
-    public Buffer(final long maximumBufferSizeVal) {
+    public Buffer(final long maximumBufferSizeVal,
+	    final boolean keepFillingLevelHistoryVal) {
 	this.pcs = new PropertyChangeSupport(this);
 	setMaximumBufferSize(maximumBufferSizeVal);
-	initFillingLevelHistory();
-	this.startMillis = System.currentTimeMillis();
+	setKeepFillingLevelHistory(keepFillingLevelHistoryVal);
+	// this.startMillis = System.currentTimeMillis();
+    }
+
+    /**
+     * Buffer constructor.
+     * 
+     * @param maximumBufferSizeVal
+     *            <code>long</code>
+     */
+    public Buffer(final long maximumBufferSizeVal) {
+	this(maximumBufferSizeVal, false);
     }
 
     /**
@@ -133,13 +168,15 @@ public abstract class Buffer {
      * checkFillingLevel.
      */
     private void checkFillingLevel() {
-	final ValueTuple tuple = new ValueTuple(
-		(System.currentTimeMillis() / 1000d),
-		// (System.currentTimeMillis() - this.startMillis) / 1000d,
-		// (100 * this.bufferFillingLevel)
-		// / (double) getMaximumBufferSize());
-		(double) this.bufferFillingLevel);
-	this.fillingLevelHistory.addTuple(tuple);
+	if (this.fillingLevelHistory != null) {
+	    final ValueTuple tuple = new ValueTuple(
+		    (System.currentTimeMillis() / 1000d),
+		    // (System.currentTimeMillis() - this.startMillis) / 1000d,
+		    // (100 * this.bufferFillingLevel)
+		    // / (double) getMaximumBufferSize());
+		    (double) this.bufferFillingLevel);
+	    this.fillingLevelHistory.addTuple(tuple);
+	}
     }
 
     /**

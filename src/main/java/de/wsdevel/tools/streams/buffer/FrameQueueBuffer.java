@@ -106,8 +106,8 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      */
     public FrameQueueBuffer(final int maxBufferSizeVal,
 	    final SegmentFactory<F, S> segmentFactoryRef,
-	    final boolean closeableCIS) {
-	super(maxBufferSizeVal);
+	    final boolean closeableCIS, final boolean keepFillingLevelHistory) {
+	super(maxBufferSizeVal, keepFillingLevelHistory);
 	setBevavior(BufferBehavior.fastAccessRingBuffer);
 	// (20131105 saw) selection of best performing queues. For us
 	// ArrayBlockingQueue should be the best selection.
