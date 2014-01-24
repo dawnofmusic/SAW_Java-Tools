@@ -104,19 +104,15 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
     /**
      * SegmentQueueBuffer constructor.
      */
-    public FrameQueueBuffer(final int maxBufferSizeVal,
-	    final SegmentFactory<F, S> segmentFactoryRef,
+    public FrameQueueBuffer(final int maxNumberOfElements,
 	    final boolean closeableCIS, final boolean keepFillingLevelHistory) {
-	super(maxBufferSizeVal, keepFillingLevelHistory);
+	super(maxNumberOfElements, keepFillingLevelHistory);
 	setBevavior(BufferBehavior.fastAccessRingBuffer);
 	// (20131105 saw) selection of best performing queues. For us
 	// ArrayBlockingQueue should be the best selection.
 	// this.queue = new ConcurrentLinkedQueue<F>();
 	// this.queue = new LinkedBlockingQueue<F>();
-
-	final int maxElements = Math.round((1.1f * maxBufferSizeVal)
-		/ segmentFactoryRef.getMaxFrameSize());
-	this.queue = new ArrayBlockingQueue<S>(maxElements);
+	this.queue = new ArrayBlockingQueue<S>(maxNumberOfElements);
 	this.cos = new ContainerOutputStream<F, S>(null) {
 	    @Override
 	    public void close() throws IOException {
@@ -226,15 +222,14 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * @param frame
      */
     private void internalFastWrite(final S frame) {
-	updateFillingLevelHistory(0);
-	if (this.queue.offer(frame)) {
-	    updateFillingLevelHistory(frame.getSize());
-	    synchronized (this.readingLock) {
-		this.readingLock.notifyAll();
-	    }
-	} else {
+	updateFillingLevelHistory();
+	while (!this.queue.offer(frame)) {
 	    // read frames to dev null (20131108 saw)
 	    read();
+	}
+	updateFillingLevelHistory();
+	synchronized (this.readingLock) {
+	    this.readingLock.notifyAll();
 	}
     }
 
@@ -244,9 +239,9 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
      * @param frame
      */
     private void internalShapingWrite(final S frame) {
-	updateFillingLevelHistory(0);
+	updateFillingLevelHistory();
 	if (this.queue.offer(frame)) {
-	    updateFillingLevelHistory(frame.getSize());
+	    updateFillingLevelHistory();
 	    synchronized (this.readingLock) {
 		this.readingLock.notifyAll();
 	    }
@@ -274,7 +269,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		}
 	    }
 	    // try {
-	    updateFillingLevelHistory(0);
+	    updateFillingLevelHistory();
 	    final S poll = this.queue.poll();
 	    if (poll == null) {
 		this.waitUntil = -1;
@@ -318,19 +313,19 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		synchronized (this.writingLock) {
 		    this.writingLock.notifyAll();
 		}
-		updateFillingLevelHistory(-poll.getSize());
+		updateFillingLevelHistory();
 		return poll;
 	    }
 	    // } catch (final InterruptedException e) {
 	    // }
 	case fastAccessRingBuffer:
 	default:
-	    updateFillingLevelHistory(0);
+	    updateFillingLevelHistory();
 	    // System.out.println("during read before take!");
 	    final S poll2 = this.queue.poll();
 	    // System.out.println("during read after take!");
 	    if (poll2 != null) {
-		updateFillingLevelHistory(-poll2.getSize());
+		updateFillingLevelHistory();
 	    }
 	    return poll2;
 	}
@@ -381,7 +376,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	case trafficShapingBlockingBuffer:
 	    synchronized (this.writingLock) {
 		while (this.writeBlocked
-			|| (getCurrentBytes() > getMaximumBufferSize())) {
+			|| (getCurrentNumberOfElements() > getMaximumNumberOfElements())) {
 		    try {
 			this.writingLock.wait(200);
 		    } catch (final InterruptedException e) {
@@ -394,7 +389,7 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	default:
 	    synchronized (this.readingLock) {
 		internalFastWrite(frame);
-		while (getCurrentBytes() > getMaximumBufferSize()) {
+		while (getCurrentNumberOfElements() > getMaximumNumberOfElements()) {
 		    // read frames to dev null (20130424 saw)
 		    read();
 		    // final S read = read();
@@ -405,6 +400,17 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    }
 	    break;
 	}
+    }
+
+    /**
+     * getCurrentNumberOfElements.
+     * 
+     * @see de.wsdevel.tools.streams.buffer.Buffer#getCurrentNumberOfElements()
+     * @return <code>long</code>
+     */
+    @Override
+    public long getCurrentNumberOfElements() {
+	return this.queue.size();
     }
 
 }

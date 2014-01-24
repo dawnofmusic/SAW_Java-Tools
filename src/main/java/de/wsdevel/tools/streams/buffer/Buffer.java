@@ -42,11 +42,6 @@ public abstract class Buffer {
     private BufferBehavior bevavior;
 
     /**
-     * {@link long} bufferFillingLevel
-     */
-    private long bufferFillingLevel = 0;
-
-    /**
      * {@link Graph} fillingLevelHistory
      */
     private Graph fillingLevelHistory = null;
@@ -61,7 +56,7 @@ public abstract class Buffer {
      * 
      * @return <code>int</code>
      */
-    private long maximumBufferSize = -1;
+    private long maximumNumberOfElements = -1;
 
     /** {@link PropertyChangeSupport} The pcs. */
     protected final PropertyChangeSupport pcs;
@@ -107,13 +102,13 @@ public abstract class Buffer {
     /**
      * Buffer constructor.
      * 
-     * @param maximumBufferSizeVal
+     * @param maximumNumberOfElements
      *            {@code long}
      */
-    public Buffer(final long maximumBufferSizeVal,
+    public Buffer(final long maximumNumberOfElements,
 	    final boolean keepFillingLevelHistoryVal) {
 	this.pcs = new PropertyChangeSupport(this);
-	setMaximumBufferSize(maximumBufferSizeVal);
+	setMaximumNumberOfElements(maximumNumberOfElements);
 	setKeepFillingLevelHistory(keepFillingLevelHistoryVal);
 	// this.startMillis = System.currentTimeMillis();
     }
@@ -121,11 +116,11 @@ public abstract class Buffer {
     /**
      * Buffer constructor.
      * 
-     * @param maximumBufferSizeVal
+     * @param maximumNumberOfElementsVal
      *            <code>long</code>
      */
-    public Buffer(final long maximumBufferSizeVal) {
-	this(maximumBufferSizeVal, false);
+    public Buffer(final long maximumNumberOfElementsVal) {
+	this(maximumNumberOfElementsVal, false);
     }
 
     /**
@@ -174,7 +169,7 @@ public abstract class Buffer {
 		    // (System.currentTimeMillis() - this.startMillis) / 1000d,
 		    // (100 * this.bufferFillingLevel)
 		    // / (double) getMaximumBufferSize());
-		    (double) this.bufferFillingLevel);
+		    (double) getCurrentNumberOfElements());
 	    this.fillingLevelHistory.addTuple(tuple);
 	}
     }
@@ -185,12 +180,12 @@ public abstract class Buffer {
     protected void checkStatus() {
 	switch (getState()) {
 	case filling:
-	    if (getCurrentBytes() > this.preFillTreshold) {
+	    if (getCurrentNumberOfElements() > this.preFillTreshold) {
 		unblockReadAccess();
 		setState(BufferState.reading);
 		if (Buffer.LOG.isInfoEnabled()) {
 		    Buffer.LOG.info("Unblocked Access. Delta was [" //$NON-NLS-1$
-			    + getCurrentBytes() + "]."); //$NON-NLS-1$
+			    + getCurrentNumberOfElements() + "]."); //$NON-NLS-1$
 		}
 	    }
 	    break;
@@ -201,14 +196,14 @@ public abstract class Buffer {
 	    // // blockWriteAccess();
 	    // // }
 	    // } else
-	    if (getCurrentBytes() < this.readingTreshold) {
+	    if (getCurrentNumberOfElements() < this.readingTreshold) {
 		if (getBevavior() != BufferBehavior.fastAccessRingBuffer) {
 		    blockReadAccess();
 		}
 		setState(BufferState.filling);
 		if (Buffer.LOG.isInfoEnabled()) {
 		    Buffer.LOG.info("Blocked Access. Delta was [" //$NON-NLS-1$
-			    + getCurrentBytes() + "]."); //$NON-NLS-1$
+			    + getCurrentNumberOfElements() + "]."); //$NON-NLS-1$
 		}
 	    }
 	    // if (getCurrentBytes() < this._50PercentTreshold) {
@@ -238,13 +233,11 @@ public abstract class Buffer {
     }
 
     /**
-     * getCurrentBytes.
+     * getCurrentNumberOfElements.
      * 
-     * @return {@code long} the current number of bytes used by this buffer;
+     * @return {@code long} the current number of elements in this buffer;
      */
-    public long getCurrentBytes() {
-	return this.bufferFillingLevel;
-    }
+    public abstract long getCurrentNumberOfElements();
 
     /**
      * @return the {@link Graph} fillingLevelHistory
@@ -258,8 +251,8 @@ public abstract class Buffer {
      * 
      * @return {@link long}
      */
-    public long getMaximumBufferSize() {
-	return this.maximumBufferSize;
+    public long getMaximumNumberOfElements() {
+	return this.maximumNumberOfElements;
     }
 
     /**
@@ -329,7 +322,6 @@ public abstract class Buffer {
      */
     protected void resetFillingLevel() {
 	synchronized (this.fillingLevelLock) {
-	    this.bufferFillingLevel = 0;
 	    initFillingLevelHistory();
 	    // final ValueTuple tuple = new ValueTuple(
 	    // (System.currentTimeMillis() - this.startMillis) / 1000d, 0);
@@ -357,18 +349,19 @@ public abstract class Buffer {
      * @param maximumBufferSize
      *            {@link long}
      */
-    public void setMaximumBufferSize(final long maximumBufferSize) {
+    public void setMaximumNumberOfElements(final long maximumBufferSize) {
 	if (maximumBufferSize < 1) {
 	    throw new IllegalArgumentException(
 		    "maximumBufferSize MUST be bigger than 0!");
 	}
-	final long oldValue = this.maximumBufferSize;
-	this.maximumBufferSize = maximumBufferSize;
-	this.preFillTreshold = Math.round(this.maximumBufferSize * 0.7f);
-	this.readingTreshold = Math.round(this.maximumBufferSize * 0.2f);
-	this._50PercentTreshold = Math.round(this.maximumBufferSize * 0.5f);
+	final long oldValue = this.maximumNumberOfElements;
+	this.maximumNumberOfElements = maximumBufferSize;
+	this.preFillTreshold = Math.round(this.maximumNumberOfElements * 0.7f);
+	this.readingTreshold = Math.round(this.maximumNumberOfElements * 0.2f);
+	this._50PercentTreshold = Math
+		.round(this.maximumNumberOfElements * 0.5f);
 	this.pcs.firePropertyChange(Buffer.PROPERTY_NAME_MAXIMUM_BUFFER_SIZE,
-		oldValue, this.maximumBufferSize);
+		oldValue, this.maximumNumberOfElements);
     }
 
     /**
@@ -402,11 +395,8 @@ public abstract class Buffer {
      * @param deltaFillingLevel
      *            <code>long</code>
      */
-    protected void updateFillingLevelHistory(final long deltaFillingLevel) {
+    protected void updateFillingLevelHistory() {
 	synchronized (this.fillingLevelLock) {
-	    if (deltaFillingLevel != 0) {
-		this.bufferFillingLevel += deltaFillingLevel;
-	    }
 	    checkFillingLevel();
 	    checkStatus();
 	}
