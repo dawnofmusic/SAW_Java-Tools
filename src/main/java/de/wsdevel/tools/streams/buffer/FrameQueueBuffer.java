@@ -269,12 +269,12 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		}
 	    }
 	    // try {
-	    updateFillingLevelHistory();
 	    final S poll = this.queue.poll();
 	    if (poll == null) {
 		this.waitUntil = -1;
 		return null;
 	    } else {
+		updateFillingLevelHistory();
 		if (this.waitUntil < 0) {
 		    // first visit, initialize
 		    this.waitUntil = System.nanoTime()
@@ -320,14 +320,15 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 	    // }
 	case fastAccessRingBuffer:
 	default:
-	    updateFillingLevelHistory();
-	    // System.out.println("during read before take!");
-	    final S poll2 = this.queue.poll();
-	    // System.out.println("during read after take!");
-	    if (poll2 != null) {
+	    if (this.queue.size() > 0) {
 		updateFillingLevelHistory();
+		final S poll2 = this.queue.poll();
+		if (poll2 != null) {
+		    updateFillingLevelHistory();
+		    return poll2;
+		}
 	    }
-	    return poll2;
+	    return null;
 	}
 	// // will happen only in case of being interrupted
 	// return null;

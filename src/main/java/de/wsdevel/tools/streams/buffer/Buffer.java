@@ -67,11 +67,6 @@ public abstract class Buffer {
     /** {@link int} The preFill. */
     private int readingTreshold;
 
-    // /**
-    // * {@link long} startMillis
-    // */
-    // private final long startMillis;
-
     /** {@link BufferState} The state. */
     private BufferState state = BufferState.filling;
 
@@ -110,7 +105,6 @@ public abstract class Buffer {
 	this.pcs = new PropertyChangeSupport(this);
 	setMaximumNumberOfElements(maximumNumberOfElements);
 	setKeepFillingLevelHistory(keepFillingLevelHistoryVal);
-	// this.startMillis = System.currentTimeMillis();
     }
 
     /**
@@ -199,11 +193,11 @@ public abstract class Buffer {
 	    if (getCurrentNumberOfElements() < this.readingTreshold) {
 		if (getBevavior() != BufferBehavior.fastAccessRingBuffer) {
 		    blockReadAccess();
-		}
-		setState(BufferState.filling);
-		if (Buffer.LOG.isInfoEnabled()) {
-		    Buffer.LOG.info("Blocked Access. Delta was [" //$NON-NLS-1$
-			    + getCurrentNumberOfElements() + "]."); //$NON-NLS-1$
+		    setState(BufferState.filling);
+		    if (Buffer.LOG.isInfoEnabled()) {
+			Buffer.LOG.info("Blocked Access. Delta was [" //$NON-NLS-1$
+				+ getCurrentNumberOfElements() + "]."); //$NON-NLS-1$
+		    }
 		}
 	    }
 	    // if (getCurrentBytes() < this._50PercentTreshold) {
@@ -323,9 +317,6 @@ public abstract class Buffer {
     protected void resetFillingLevel() {
 	synchronized (this.fillingLevelLock) {
 	    initFillingLevelHistory();
-	    // final ValueTuple tuple = new ValueTuple(
-	    // (System.currentTimeMillis() - this.startMillis) / 1000d, 0);
-	    // this.fillingLevelHistory.addTuple(tuple);
 	}
     }
 
