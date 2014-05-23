@@ -142,6 +142,11 @@ public class FrameQueueBuffer<F extends Frame, S extends Segment<F>> extends
 		checkClosed();
 		return FrameQueueBuffer.this.read();
 	    }
+
+	    @Override
+	    public F readFrame() throws IOException {
+		throw new UnsupportedOperationException();
+	    }
 	};
 	addPropertyChangeListener(Buffer.PROPERTY_NAME_STATE,
 		new PropertyChangeListener() {

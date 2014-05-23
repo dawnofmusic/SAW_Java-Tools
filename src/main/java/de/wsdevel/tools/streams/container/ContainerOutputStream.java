@@ -16,6 +16,7 @@
 
 package de.wsdevel.tools.streams.container;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -25,18 +26,7 @@ import java.io.OutputStream;
  * @param <code>T</code> any type extending {@link Frame}
  */
 public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
-	extends OutputStream {
-
-    /**
-     * {@link OutputStream} innerOs
-     */
-    protected OutputStream innerOs;
-
-    /**
-     * ContainerOutputStream constructor.
-     */
-    public ContainerOutputStream() {
-    }
+	extends DataOutputStream {
 
     /**
      * ContainerOutputStream constructor.
@@ -45,71 +35,7 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
      *            {@link OutputStream}
      */
     public ContainerOutputStream(final OutputStream innerOsRef) {
-	setInnerOs(innerOsRef);
-    }
-
-    /**
-     * @throws IOException
-     * @see java.io.OutputStream#close()
-     */
-    @Override
-    public void close() throws IOException {
-	this.innerOs.close();
-    }
-
-    /**
-     * @throws IOException
-     * @see java.io.OutputStream#flush()
-     */
-    @Override
-    public void flush() throws IOException {
-	this.innerOs.flush();
-    }
-
-    /**
-     * Returns the innerOs.
-     * 
-     * @return {@link OutputStream}
-     */
-    public OutputStream getInnerOs() {
-	return this.innerOs;
-    }
-
-    /**
-     * Sets the innerOs.
-     * 
-     * @param innerOs
-     *            {@link OutputStream}
-     */
-    public void setInnerOs(final OutputStream innerOs) {
-	this.innerOs = innerOs;
-    }
-
-    /**
-     * @param b
-     *            <code>byte[]</code>
-     * @param off
-     *            <code>int</code>
-     * @param len
-     *            <code>int</code>
-     * @throws IOException
-     * @see java.io.OutputStream#write(byte[], int, int)
-     */
-    @Override
-    public void write(final byte[] b, final int off, final int len)
-	    throws IOException {
-	this.innerOs.write(b, off, len);
-    }
-
-    /**
-     * @param b
-     *            <code>int</code>
-     * @throws IOException
-     * @see java.io.OutputStream#write(int)
-     */
-    @Override
-    public void write(final int b) throws IOException {
-	this.innerOs.write(b);
+	super(innerOsRef);
     }
 
     /**
@@ -141,13 +67,13 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
 		    if (t != null) {
 			// (20131107 saw) actually this should never happen, but
 			// sometimes...
-			this.innerOs.write(t.toBytes());
+			write(t.toBytes());
 			// writeFrame(t);
 		    }
 		}
 	    case binary:
 	    case both:
-		this.innerOs.write(segment.getData());
+		write(segment.getData());
 	    default:
 	    }
 	}
@@ -182,7 +108,6 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
     }
 
 }
-
 // ==============[VERSION-CONTROL-LOG-START]==============
 // -------------------------------------------------------
 // $Log: $
