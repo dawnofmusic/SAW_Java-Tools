@@ -29,16 +29,6 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
 	extends DataOutputStream {
 
     /**
-     * ContainerOutputStream constructor.
-     * 
-     * @param innerOsRef
-     *            {@link OutputStream}
-     */
-    public ContainerOutputStream(final OutputStream innerOsRef) {
-	super(innerOsRef);
-    }
-
-    /**
      * writeFrame.
      * 
      * @param frame
@@ -48,35 +38,6 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
     private static void writeFrame(final OutputStream innerOs, final Frame frame)
 	    throws IOException {
 	innerOs.write(frame.toBytes());
-    }
-
-    /**
-     * writeSegment.
-     * 
-     * @param segment
-     * @throws IOException
-     */
-    public void writeSegment(final S segment) throws IOException {
-	if (segment == null) {
-	    throw new NullPointerException("segment MUST NOT be null!");
-	}
-	synchronized (segment) {
-	    switch (segment.getState()) {
-	    case deserialized:
-		for (F t : segment.getFrames()) {
-		    if (t != null) {
-			// (20131107 saw) actually this should never happen, but
-			// sometimes...
-			write(t.toBytes());
-			// writeFrame(t);
-		    }
-		}
-	    case binary:
-	    case both:
-		write(segment.getData());
-	    default:
-	    }
-	}
     }
 
     /**
@@ -103,6 +64,54 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
 		    // sometimes...
 		    writeFrame(innerOs, frames[i]);
 		}
+	    }
+	}
+    }
+
+    /**
+     * ContainerOutputStream constructor.
+     * 
+     * @param innerOsRef
+     *            {@link OutputStream}
+     */
+    public ContainerOutputStream(final OutputStream innerOsRef) {
+	super(innerOsRef);
+    }
+
+    /**
+     * writeFrame.
+     * 
+     * @throws IOException
+     */
+    public void writeFrame(final F frame) throws IOException {
+	write(frame.toBytes());
+    }
+
+    /**
+     * writeSegment.
+     * 
+     * @param segment
+     * @throws IOException
+     */
+    public void writeSegment(final S segment) throws IOException {
+	if (segment == null) {
+	    throw new NullPointerException("segment MUST NOT be null!");
+	}
+	synchronized (segment) {
+	    switch (segment.getState()) {
+	    case deserialized:
+		for (final F t : segment.getFrames()) {
+		    if (t != null) {
+			// (20131107 saw) actually this should never happen, but
+			// sometimes...
+			write(t.toBytes());
+			// writeFrame(t);
+		    }
+		}
+	    case binary:
+	    case both:
+		write(segment.getData());
+	    default:
 	    }
 	}
     }
