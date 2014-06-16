@@ -70,6 +70,13 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
 
     /**
      * ContainerOutputStream constructor.
+     */
+    public ContainerOutputStream() {
+	super(null);
+    }
+
+    /**
+     * ContainerOutputStream constructor.
      * 
      * @param innerOsRef
      *            {@link OutputStream}
@@ -81,6 +88,8 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
     /**
      * writeFrame.
      * 
+     * @see de.wsdevel.tools.streams.container.IContainerOutputStream#writeFrame(F)
+     * @param frame
      * @throws IOException
      */
     public void writeFrame(final F frame) throws IOException {
@@ -90,6 +99,7 @@ public class ContainerOutputStream<F extends Frame, S extends Segment<F>>
     /**
      * writeSegment.
      * 
+     * @see de.wsdevel.tools.streams.container.IContainerOutputStream#writeSegment(S)
      * @param segment
      * @throws IOException
      */
