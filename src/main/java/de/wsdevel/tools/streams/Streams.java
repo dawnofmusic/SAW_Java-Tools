@@ -101,6 +101,7 @@ public final class Streams {
 	    int len;
 	    while ((len = in.read(buf)) > -1) {
 		out.write(buf, 0, len);
+		out.flush();
 	    }
 	} finally {
 	    if (closeIn) {
