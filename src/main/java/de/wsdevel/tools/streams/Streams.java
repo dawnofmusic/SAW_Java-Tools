@@ -180,9 +180,9 @@ public final class Streams {
      */
     public static String readStringFromStream(final InputStream inputStream) {
 	StringBuffer buffer = new StringBuffer();
+	BufferedReader reader = null;
 	try {
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(
-		    inputStream));
+	    reader = new BufferedReader(new InputStreamReader(inputStream));
 	    if (LOG.isDebugEnabled()) {
 		LOG.debug("Content: ");
 	    }
@@ -203,6 +203,13 @@ public final class Streams {
 	    }
 	} catch (IOException e) {
 	    LOG.error("could not extract content from URLConnection: ", e);
+	} finally {
+	    if (reader != null) {
+		try {
+		    reader.close();
+		} catch (IOException e) {
+		}
+	    }
 	}
 	return buffer.toString();
     }
